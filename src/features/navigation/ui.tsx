@@ -1,6 +1,5 @@
-import React from 'react';
-import { BoxMUI } from '../../shared/ui/box-mui';
-import { LinkMUI } from '../../shared/ui/link-mui';
+import BoxMUI from '../../shared/ui/box-mui';
+import LinkMUI from '../../shared/ui/link-mui';
 
 function Navigation({ items }) {
 	return (
