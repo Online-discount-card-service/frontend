@@ -17,7 +17,9 @@ function Navigation({ items }) {
 			}}
 		>
 			{items.map((item) => {
-				return <LinkMUI href={item.url}>{item.text}</LinkMUI>;
+				return (
+					<LinkMUI href={item.url} text={item.text} isActive={item.isActive} />
+				);
 			})}
 		</BoxMUI>
 	);

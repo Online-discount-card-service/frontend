@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import BoxMUI from '../shared/ui/box-mui';
 
 const meta = {
-	title: 'Example/Input',
+	title: 'Example/Box',
 	component: BoxMUI,
 	parameters: {
 		layout: 'centered',

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import LinkMUI from '../shared/ui/link-mui';
 
 const meta = {
-	title: 'Example/Input',
+	title: 'Example/Link',
 	component: LinkMUI,
 	parameters: {
 		layout: 'centered',

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import Navigation from '../features/navigation';
 
 const meta = {
-	title: 'Example/Input',
+	title: 'Example/Navigation',
 	component: Navigation,
 	parameters: {
 		layout: 'centered',
