@@ -17,7 +17,35 @@ type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {
 	args: {
-		text: 'Войти',
-		isEnabled: true,
+		label: 'Войти',
+		variant: 'contained',
+		disabled: false,
+		color: 'primary',
+	},
+};
+export const Secondary: Story = {
+	args: {
+		label: 'Войти',
+		disabled: false,
+		variant: 'contained',
+		color: 'secondary',
+	},
+};
+
+export const Outlined: Story = {
+	args: {
+		label: 'Войти',
+		disabled: false,
+		variant: 'outlined',
+		color: 'primary',
+	},
+};
+
+export const Text: Story = {
+	args: {
+		label: 'Войти',
+		disabled: false,
+		variant: 'text',
+		color: 'primary',
 	},
 };
