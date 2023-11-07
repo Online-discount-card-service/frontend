@@ -1,10 +1,18 @@
 import { FC } from 'react';
-import { Box, Button, Container, IconButton, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Input,
+  Typography,
+} from '@mui/material';
 import { AppFooter } from '~/shared/ui';
 import { Header } from '~/widgets/header';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CreateIcon from '@mui/icons-material/Create';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import Barcode from 'react-barcode';
 
 interface AddedCardProps {
   title: string;
@@ -18,14 +26,8 @@ export const AddedCard: FC<AddedCardProps> = ({
   barcodeNumber,
 }) => {
   return (
-    <Container
-      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-    >
-      <Header
-        user={{ name: 'иван' }}
-        isLoggedIn={true}
-        type="standard"
-      ></Header>
+    <Container sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Header user={{ name: 'иван' }} isLoggedIn={true} type="standard" />
       <Box
         component="div"
         sx={{
@@ -35,6 +37,7 @@ export const AddedCard: FC<AddedCardProps> = ({
           display: 'flex',
           justifyContent: 'space-between',
           position: 'relative',
+          alignSelf: 'center',
         }}
       >
         {/* Нужно менять на линк из React-Router */}
@@ -53,10 +56,10 @@ export const AddedCard: FC<AddedCardProps> = ({
         </a>
         <Typography sx={{ fontSize: '2rem' }}>{title}</Typography>
         <IconButton sx={{ padding: 0 }}>
-          <CreateIcon></CreateIcon>
+          <CreateIcon />
         </IconButton>
       </Box>
-      <Box>
+      <Box sx={{ alignSelf: 'center' }}>
         <Box
           sx={{
             border: '1px solid rgb(73, 69, 78)',
@@ -74,69 +77,89 @@ export const AddedCard: FC<AddedCardProps> = ({
               padding: 0,
             }}
           >
-            <FavoriteBorderIcon></FavoriteBorderIcon>
+            <FavoriteBorderIcon />
           </IconButton>
         </Box>
       </Box>
-      <Box sx={{ padding: '1.5rem 0 0', minWidth: '20.5rem' }}>
-        <Box
+      <Box
+        sx={{
+          padding: '1.5rem 0 0',
+          minWidth: '20.5rem',
+          position: 'relative',
+        }}
+      >
+        <Input
           sx={{
             border: '1px solid rgb(73, 69, 78)',
             borderRadius: '.25rem',
             padding: '1rem',
             display: 'flex',
             justifyContent: 'space-between',
-            position: 'relative',
+          }}
+          defaultValue={cardNumber}
+          disabled={true}
+        ></Input>
+        <Typography
+          sx={{
+            position: 'absolute',
+            color: '#49454F',
+            fontSize: '0.75rem',
+            top: '1rem',
+            left: '1rem',
+            backgroundColor: '#fff',
+            padding: '0 .25rem',
           }}
         >
-          <Typography
-            sx={{
-              position: 'absolute',
-              color: '#49454F',
-              fontSize: '0.75rem',
-              top: '-.6rem',
-              left: '1rem',
-              backgroundColor: '#fff',
-              padding: '0 .25rem',
-            }}
-          >
-            Номер карты
-          </Typography>
-          <Typography>{cardNumber}</Typography>
-          <IconButton sx={{ padding: 0 }}>
-            <ContentCopyIcon></ContentCopyIcon>
-          </IconButton>
-        </Box>
+          Номер карты
+        </Typography>
+        <IconButton
+          sx={{ padding: 0, position: 'absolute', right: '1rem', top: '50%' }}
+        >
+          <ContentCopyIcon />
+        </IconButton>
       </Box>
-      <Box sx={{ padding: '1.5rem 0 0', minWidth: '20.5rem' }}>
-        <Box sx={{ color: '#fff', background: '#000' }}>Тут будет штрихкод</Box>
+      <Box
+        sx={{
+          padding: '1.5rem 0 0',
+          minWidth: '20.5rem',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Тут не номер карты наверное будет, а её штрихкод */}
+        <Barcode value={cardNumber} />
       </Box>
-      <Box sx={{ padding: '1.5rem 0 0', minWidth: '20.5rem' }}>
-        <Box
+      <Box
+        sx={{
+          padding: '1.5rem 0 0',
+          minWidth: '20.5rem',
+          position: 'relative',
+        }}
+      >
+        <Input
           sx={{
             border: '1px solid rgb(73, 69, 78)',
             borderRadius: '.25rem',
             padding: '1rem',
             display: 'flex',
             justifyContent: 'space-between',
-            position: 'relative',
+          }}
+          disabled={true}
+          defaultValue={barcodeNumber}
+        ></Input>
+        <Typography
+          sx={{
+            position: 'absolute',
+            color: '#49454F',
+            fontSize: '0.75rem',
+            top: '1rem',
+            left: '1rem',
+            backgroundColor: '#fff',
+            padding: '0 .25rem',
           }}
         >
-          <Typography
-            sx={{
-              position: 'absolute',
-              color: '#49454F',
-              fontSize: '0.75rem',
-              top: '-.6rem',
-              left: '1rem',
-              backgroundColor: '#fff',
-              padding: '0 .25rem',
-            }}
-          >
-            Номер штрихкода
-          </Typography>
-          <Typography>{barcodeNumber}</Typography>
-        </Box>
+          Номер штрихкода
+        </Typography>
       </Box>
       <Box
         sx={{
