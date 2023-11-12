@@ -5,7 +5,7 @@ const meta = {
   title: 'Components/Home',
   component: Home,
   parameters: {
-    layout: 'centered',
+    layout: 'center',
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof Home>;

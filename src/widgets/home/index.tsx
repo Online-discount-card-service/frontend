@@ -1,8 +1,8 @@
 import { Box, Container, Typography } from '@mui/material';
 import { AccentButton } from '~/shared/ui';
 import { Carousel } from '~/features';
-import { imgPromoCards } from '~/shared/mock/img-promo-cards';
 import coverImage from '~/shared/assets/save-money-bw-1.svg';
+import { defaultPromoCards } from '~/shared/mock';
 import { coverImgStyle, mainContainerStyle, paragraphStyle } from './styles';
 
 export const Home = () => {
@@ -28,7 +28,7 @@ export const Home = () => {
         Добавьте в свой кошелек
       </Typography>
 
-      <Carousel items={imgPromoCards} />
+      <Carousel items={defaultPromoCards} isLoggedIn={false} />
 
       <AccentButton children={'Попробовать'} />
     </Container>

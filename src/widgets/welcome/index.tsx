@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import { AccentButton } from '~/shared/ui';
 import { Carousel } from '~/features';
-import { imgPromoCards } from '~/shared/mock/img-promo-cards';
+import { defaultPromoCards } from '~/shared/mock';
 import coverImage from '~/shared/assets/payment-bw-1.svg';
 import { coverImgStyle, mainContainerStyle, paragraphStyle } from './styles';
 
@@ -54,7 +54,7 @@ export const Welcome: FC<WelcomeProps> = ({ user }) => {
         Можно добавить
       </Typography>
 
-      <Carousel items={imgPromoCards} />
+      <Carousel items={defaultPromoCards} isLoggedIn={true} />
     </Container>
   );
 };
