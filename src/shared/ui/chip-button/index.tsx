@@ -1,6 +1,14 @@
-import { Chip } from '@mui/material';
-import { style } from './style';
+import { Box, Typography } from '@mui/material';
+import { wrapStyle, textStyle } from './style';
 
-export const ChipButton = ({ ...props }) => {
-  return <Chip variant="outlined" size="medium" sx={{ ...style }} {...props} />;
+interface ChipButtonProps {
+  label: string;
+}
+
+export const ChipButton = ({ label }: ChipButtonProps) => {
+  return (
+    <Box sx={{ ...wrapStyle }}>
+      <Typography sx={{ ...textStyle }} children={label} />
+    </Box>
+  );
 };
