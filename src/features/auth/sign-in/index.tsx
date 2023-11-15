@@ -1,13 +1,29 @@
 import { Link, List, ListItem } from '@mui/material';
-import { AuthForm } from '~/entities';
+import { useNavigate } from 'react-router-dom';
+import { AuthForm } from '..';
+import * as z from 'zod';
+import { authFormErrors } from '~/shared/lib';
+import style from './style';
 
 export const SignInForm = () => {
+  const navigate = useNavigate();
+  const schema = z.object({
+    email: z
+      .string({
+        required_error: authFormErrors.required,
+      })
+      .email({ message: authFormErrors.wrongEmail }),
+    password: z.string({
+      required_error: authFormErrors.required,
+    }),
+  });
+
   const fields = [
     {
       name: 'email',
       label: 'Email',
       type: 'email',
-      defaultHelperText: '',
+      defaultHelperText: ' ',
       autoComplete: 'email',
       required: true,
       placeholder: '',
@@ -16,21 +32,27 @@ export const SignInForm = () => {
       name: 'password',
       label: 'Пароль',
       type: 'password',
-      defaultHelperText: '',
+      defaultHelperText: ' ',
       autoComplete: 'current-password',
       required: true,
       placeholder: '',
     },
   ];
 
+  const submit = () => {
+    navigate('/authorizedWithCards', { relative: 'path' });
+  };
+
   return (
-    <AuthForm fields={fields} button={{ label: 'Войти', isFullWidth: true }}>
-      <List sx={{ fontSize: '12px', fontWeight: 300 }}>
-        <ListItem dense disableGutters>
+    <AuthForm
+      fields={fields}
+      schema={schema}
+      button={{ label: 'Войти', fullWidth: true }}
+      submit={submit}
+    >
+      <List sx={style.list} color="secondary" dense disablePadding>
+        <ListItem disableGutters disablePadding dense>
           <Link>Забыли пароль?</Link>
-        </ListItem>
-        <ListItem dense disableGutters>
-          <Link>Нужна помощь?</Link>
         </ListItem>
       </List>
     </AuthForm>
