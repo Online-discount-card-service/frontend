@@ -1,12 +1,10 @@
 import { useContext, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, Container, IconButton, Stack, Box } from '@mui/material';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import CreateIcon from '@mui/icons-material/Create';
-import { BackButton } from '~/features';
+import { BackButton, Liker } from '~/features';
 import { CardFull, EditCardForm } from '~/entities';
-import { buttonStyle, topButtonsStyle } from './style';
+import { buttonStyle, topButtonsStyle, likerWrapperStyle } from './style';
 import { defaultCard } from '~/shared/mock/default-card';
 import { CardsContext } from '~/app';
 
@@ -17,11 +15,15 @@ export const CardWidget = () => {
   const cards = useContext(CardsContext);
   const card = cards.find((card) => card.id == id) || defaultCard;
   const { cardNumber, barcodeNumber } = card;
-  const isLiked = false;
+  const isLiked = card.favorite;
 
   const handleEditEnable = () => {
     setIsEditActive(true);
   };
+
+  function handleClickLike() {
+    return;
+  }
 
   return (
     <Container sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -33,9 +35,9 @@ export const CardWidget = () => {
         <BackButton />
         {!isEditActive && (
           <Stack direction="row">
-            <IconButton sx={{ padding: 0.5 }}>
-              {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-            </IconButton>
+            <Box sx={{ ...likerWrapperStyle }}>
+              <Liker onClickLike={handleClickLike} isLiked={isLiked} />
+            </Box>
             <IconButton onClick={handleEditEnable} sx={{ padding: 0.5 }}>
               <CreateIcon />
             </IconButton>

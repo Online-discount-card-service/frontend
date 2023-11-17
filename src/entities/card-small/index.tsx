@@ -1,14 +1,18 @@
 import { FC } from 'react';
-import { Card, Typography, IconButton } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { Card, Box, Typography } from '@mui/material';
+import { Liker } from '~/features';
 import { ICardContext } from '~/shared/types';
-import { cardStyle, iconButtonStyle, titleStyle } from './style';
+import { cardStyle, titleStyle, likerWrapperStyle } from './style';
 
 export const CardSmall: FC<ICardContext> = (item) => {
   const shopName = item.shop?.name || '';
   const shopLogo = item.shop?.logo || '';
-  const isLiked = false;
+  const isLiked = item.favorite;
+
+  function handleClickLike() {
+    return;
+  }
+
   return (
     <Card
       variant="outlined"
@@ -18,10 +22,10 @@ export const CardSmall: FC<ICardContext> = (item) => {
         ...cardStyle,
       }}
     >
-      <IconButton size="small" sx={{ ...iconButtonStyle }}>
-        {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-      </IconButton>
       {!shopLogo && <Typography sx={{ ...titleStyle }}>{shopName}</Typography>}
+      <Box sx={{ ...likerWrapperStyle }}>
+        <Liker onClickLike={handleClickLike} isLiked={isLiked} />
+      </Box>
     </Card>
   );
 };
