@@ -26,6 +26,9 @@ export const Home = () => {
         sx={{ ...coverImgStyle }}
         alt="Персонаж, несущий свинью-копилку"
         src={coverImage}
+        //NOTE: May not be supported in all browsers
+        height="248"
+        width="328"
       />
 
       <Typography

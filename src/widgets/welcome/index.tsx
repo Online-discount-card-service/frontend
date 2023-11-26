@@ -29,6 +29,9 @@ export const Welcome = () => {
         sx={{ ...coverImgStyle }}
         alt="Персонаж, подбрасывающий монету"
         src={coverImage}
+        //NOTE: May not be supported in all browsers
+        height="150"
+        width="200"
       />
 
       <Typography
