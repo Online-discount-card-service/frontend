@@ -1,5 +1,5 @@
 import { FC, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import Barcode from 'react-barcode';
 import { Box, TextField, Button, Autocomplete, Card } from '@mui/material';
@@ -120,6 +120,8 @@ export const AddCardForm: FC<AddCardFormType> = ({
     }
   };
 
+  const location = useLocation();
+
   return (
     <Box
       component="form"
@@ -141,7 +143,7 @@ export const AddCardForm: FC<AddCardFormType> = ({
             freeSolo
             fullWidth
             autoSelect
-            value={value}
+            value={location.state.shop.name || value}
             options={shops.map((option) => option.name)}
             renderInput={(params) => (
               <TextField
