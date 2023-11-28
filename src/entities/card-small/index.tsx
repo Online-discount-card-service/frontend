@@ -1,11 +1,16 @@
 import { FC } from 'react';
-import { Card, Typography, IconButton } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import { CardProps } from '~/shared/types';
-import { cardStyle, iconButtonStyle, titleStyle } from './style';
+import { useNavigate } from 'react-router-dom';
+import { Card, Box, Typography } from '@mui/material';
+import { Liker } from '~/features';
+import { ICardContext } from '~/shared/types';
+import { cardStyle, titleStyle, likerWrapperStyle } from './style';
 
-export const CardSmall: FC<CardProps> = ({ shopName, isLiked, shopLogo }) => {
+export const CardSmall: FC<{ item: ICardContext }> = ({ item, ...props }) => {
+  const shopName = item.card.shop?.name;
+  const shopLogo = item.card.shop?.logo;
+  const cardId = item.card.id;
+  const isLiked = item.favourite;
+  const navigate = useNavigate();
   return (
     <Card
       variant="outlined"
@@ -14,11 +19,13 @@ export const CardSmall: FC<CardProps> = ({ shopName, isLiked, shopLogo }) => {
         backgroundColor: shopLogo ? '' : '#52358f',
         ...cardStyle,
       }}
+      onClick={() => navigate(`/card/${item.card.id}`, { relative: 'path' })}
+      {...props}
     >
-      <IconButton size="small" sx={{ ...iconButtonStyle }}>
-        {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-      </IconButton>
       {!shopLogo && <Typography sx={{ ...titleStyle }}>{shopName}</Typography>}
+      <Box sx={{ ...likerWrapperStyle }}>
+        <Liker cardId={cardId} isLiked={isLiked} />
+      </Box>
     </Card>
   );
 };

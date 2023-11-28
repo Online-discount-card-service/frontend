@@ -1,11 +1,16 @@
-import { Link, List, ListItem } from '@mui/material';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthForm } from '..';
+import { Link, List, ListItem } from '@mui/material';
 import * as z from 'zod';
-import { authFormErrors } from '~/shared/lib';
-import style from './style';
+import { CardsContext, UserContext } from '~/app';
+import { getUser } from '~/features';
+import { ISignInRequest, api, authFormErrors } from '~/shared';
+import { AuthForm, signIn } from '..';
+import { listStyle, linkStyle } from './style';
 
 export const SignInForm = () => {
+  const { setUser } = useContext(UserContext);
+  const { setCards } = useContext(CardsContext);
   const navigate = useNavigate();
   const schema = z.object({
     email: z
@@ -26,7 +31,7 @@ export const SignInForm = () => {
       defaultHelperText: ' ',
       autoComplete: 'email',
       required: true,
-      placeholder: '',
+      hideAsterisk: true,
     },
     {
       name: 'password',
@@ -35,12 +40,25 @@ export const SignInForm = () => {
       defaultHelperText: ' ',
       autoComplete: 'current-password',
       required: true,
-      placeholder: '',
+      hideAsterisk: true,
     },
   ];
 
-  const submit = () => {
-    navigate('/authorizedWithCards', { relative: 'path' });
+  const submit = (data: { [key: string]: string }) => {
+    const request: ISignInRequest = {
+      email: data.email || '',
+      password: data.password || '',
+    };
+    signIn(request)
+      .then(() => {
+        const userPromise = getUser().then((res) => setUser && setUser(res));
+        const cardsPromise = api
+          .getCards()
+          .then((res) => setCards && setCards(res));
+        return Promise.all([userPromise, cardsPromise]);
+      })
+      .then(() => navigate('/'))
+      .catch((err) => console.log(err));
   };
 
   return (
@@ -50,9 +68,9 @@ export const SignInForm = () => {
       button={{ label: 'Войти', fullWidth: true }}
       submit={submit}
     >
-      <List sx={style.list} color="secondary" dense disablePadding>
+      <List sx={{ ...listStyle }} color="secondary" dense disablePadding>
         <ListItem disableGutters disablePadding dense>
-          <Link>Забыли пароль?</Link>
+          <Link sx={{ ...linkStyle }}>Забыли пароль?</Link>
         </ListItem>
       </List>
     </AuthForm>

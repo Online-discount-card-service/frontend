@@ -1,20 +1,19 @@
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ShopListContext } from '~/app/contexts';
 import { Box, Container, Typography } from '@mui/material';
 import { AccentButton } from '~/shared/ui';
 import { PromoSlider } from '~/features';
-import coverImage from '~/shared/assets/save-money-bw-1.svg';
-import { defaultPromoCards } from '~/shared/mock';
+import coverImage from '~/shared/assets/save_money_bw_1.svg';
 import { coverImgStyle, mainContainerStyle, paragraphStyle } from './styles';
 
 export const Home = () => {
+  const { shops = [] } = useContext(ShopListContext);
   const navigate = useNavigate();
+
   return (
     <Container component="main" sx={{ ...mainContainerStyle }}>
-      <Typography
-        component="p"
-        textAlign="center"
-        sx={{ paddingBottom: '1rem', ...paragraphStyle }}
-      >
+      <Typography component="p" textAlign="center" sx={{ ...paragraphStyle }}>
         Удобный и быстрый доступ к вашим картам лояльности в любом месте
       </Typography>
 
@@ -28,12 +27,12 @@ export const Home = () => {
       <Typography
         component="p"
         textAlign="left"
-        sx={{ paddingTop: '1rem', ...paragraphStyle }}
+        sx={{ ...paragraphStyle, lineHeight: 1 }}
       >
-        Добавьте в свой кошелек
+        Добавьте в свой электронный кошелёк
       </Typography>
 
-      <PromoSlider items={defaultPromoCards} isLoggedIn={false} />
+      <PromoSlider items={shops} />
 
       <AccentButton
         onClick={() => navigate('/auth', { relative: 'path' })}

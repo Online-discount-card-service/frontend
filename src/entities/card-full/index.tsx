@@ -1,14 +1,17 @@
 import { FC } from 'react';
-import { Box, Card, Typography } from '@mui/material';
 import Barcode from 'react-barcode';
-import { CardProps } from '~/shared/types';
+import { Box, Card, Typography } from '@mui/material';
+import { ICardContext } from '~/shared';
 import { cardStyle, barcodeStyle, titleStyle } from './style';
 
-export const CardFull: FC<CardProps> = ({
-  shopName,
-  shopLogo,
-  barcodeNumber,
-}) => {
+interface CardFullProps {
+  item: ICardContext;
+}
+
+export const CardFull: FC<CardFullProps> = ({ item }) => {
+  const shopName = item.card.shop?.name || '';
+  const shopLogo = item.card.shop?.logo || '';
+  const barcodeNumber = item.card.barcode_number || '';
   return (
     <Card
       sx={{
@@ -19,12 +22,7 @@ export const CardFull: FC<CardProps> = ({
     >
       {!shopLogo && <Typography sx={titleStyle}>{shopName}</Typography>}
       <Box sx={{ ...barcodeStyle }}>
-        <Barcode
-          displayValue={false}
-          margin={0}
-          value={barcodeNumber ? barcodeNumber : ''}
-          format={'EAN13'}
-        />
+        <Barcode displayValue={false} margin={0} value={barcodeNumber} />
       </Box>
     </Card>
   );

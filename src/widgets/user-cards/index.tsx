@@ -1,31 +1,18 @@
-import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { FC, useContext } from 'react';
+import { CardsContext } from '~/app/contexts';
 import { Container, Typography, Button } from '@mui/material';
-import { SearchChips } from '~/features';
+import { SearchChips, SignOut } from '~/features';
 import { CardsList } from '~/widgets';
-import { defaultCards } from '~/shared/mock/default-cards';
-import { CardProps } from '~/shared/types';
 import { mainContainerStyle, linkStyle } from './styles';
 
 type UserCardsProps = {
-  cards: CardProps[];
   tags: {
     label: string;
   }[];
-  logOut(): void;
 };
 
-export const UserCards: FC<UserCardsProps> = ({
-  cards = defaultCards,
-  tags,
-  logOut,
-}) => {
-  const navigate = useNavigate();
-  const handleClick = () => {
-    navigate('..', { relative: 'path' });
-    logOut();
-  };
-
+export const UserCards: FC<UserCardsProps> = ({ tags }) => {
+  const { cards } = useContext(CardsContext);
   return (
     <Container component="main" sx={{ ...mainContainerStyle }}>
       <Typography
@@ -36,13 +23,13 @@ export const UserCards: FC<UserCardsProps> = ({
           width: '100%',
         }}
       >
-        {`Мои карты`}
+        Мои карты
       </Typography>
       <SearchChips items={tags} />
-      <CardsList items={cards} />
-      <Button
+      <CardsList items={cards || []} />
+      <SignOut
+        element={Button}
         variant="text"
-        onClick={handleClick}
         children={'Выйти из аккаунта'}
         sx={{ ...linkStyle }}
       />

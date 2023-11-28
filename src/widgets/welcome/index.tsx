@@ -1,20 +1,18 @@
-import { FC } from 'react';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Typography } from '@mui/material';
 import { AccentButton } from '~/shared/ui';
 import { PromoSlider } from '~/features';
-import { defaultPromoCards } from '~/shared/mock';
-import coverImage from '~/shared/assets/payment-bw-1.svg';
+import { ShopListContext } from '~/app/contexts';
+import coverImage from '~/shared/assets/payment_bw_1.svg';
 import { coverImgStyle, mainContainerStyle, paragraphStyle } from './styles';
+import { UserContext } from '~/app';
 
-type WelcomeProps = {
-  user: {
-    name: string;
-  };
-};
-
-export const Welcome: FC<WelcomeProps> = ({ user }) => {
+export const Welcome = () => {
+  const { user } = useContext(UserContext);
+  const { shops = [] } = useContext(ShopListContext);
   const navigate = useNavigate();
+
   return (
     <Container component="main" sx={{ ...mainContainerStyle }}>
       <Typography
@@ -23,7 +21,7 @@ export const Welcome: FC<WelcomeProps> = ({ user }) => {
         textAlign="left"
         sx={{ padding: '0 0 1.5rem', width: '100%' }}
       >
-        {`Привет, ${user.name || 'Приятель'}!`}
+        {`Привет, ${user ? user.name : 'Приятель'}!`}
       </Typography>
 
       <Box
@@ -35,6 +33,7 @@ export const Welcome: FC<WelcomeProps> = ({ user }) => {
 
       <Typography
         component="p"
+        textAlign="center"
         sx={{
           padding: '2rem 0',
           ...paragraphStyle,
@@ -52,14 +51,14 @@ export const Welcome: FC<WelcomeProps> = ({ user }) => {
         component="p"
         textAlign="left"
         sx={{
-          padding: '1.5rem 0 0',
+          padding: '1.5rem 0 0.5rem',
           ...paragraphStyle,
         }}
       >
         Можно добавить
       </Typography>
 
-      <PromoSlider items={defaultPromoCards} isLoggedIn={true} />
+      <PromoSlider items={shops} />
     </Container>
   );
 };

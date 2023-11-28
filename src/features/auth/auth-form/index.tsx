@@ -15,7 +15,7 @@ export interface AuthFormType {
     label: string;
     width?: number;
   };
-  submit: () => void;
+  submit: (data: { [key: string]: string }) => void;
 }
 
 export const AuthForm: FC<AuthFormType> = ({
@@ -28,13 +28,13 @@ export const AuthForm: FC<AuthFormType> = ({
   const {
     register,
     handleSubmit,
-    formState: { errors, isDirty, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<{ [key: string]: string }>({
-    mode: 'all',
+    mode: 'onTouched',
     resolver: zodResolver(schema),
   });
-  const onSubmit: SubmitHandler<{ [key: string]: string }> = () => {
-    submit();
+  const onSubmit: SubmitHandler<{ [key: string]: string }> = (data) => {
+    submit(data);
   };
 
   return (
@@ -49,9 +49,9 @@ export const AuthForm: FC<AuthFormType> = ({
         fields.map((field) => (
           <InputSelector
             {...field}
+            key={field.name}
             register={register}
             errors={errors}
-            key={field.name}
           />
         ))}
 
@@ -59,7 +59,7 @@ export const AuthForm: FC<AuthFormType> = ({
       <Button
         type="submit"
         variant="contained"
-        disabled={!isDirty || !isValid}
+        disabled={isSubmitting}
         sx={{ ...buttonStyle, width: `${button.width}px` }}
         {...button}
       >

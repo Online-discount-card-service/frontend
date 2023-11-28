@@ -1,42 +1,42 @@
-import { FC } from 'react';
+import { FC, useContext } from 'react';
 import { Card, IconButton } from '@mui/material';
-import { cardStyle, iconButtonStyle, addIconStyle } from './styles';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import { UserContext } from '~/app';
+import { IShop } from '~/shared';
+import {
+  interactiveCardStyle,
+  nonInteractiveCardStyle,
+  iconButtonStyle,
+  addIconStyle,
+} from './styles';
 
 interface PromoCardProps {
-  item: {
-    _id?: string;
-    category?: string;
-    shopName?: string | null;
-    shopLogo?: string | null;
-  };
-  onCardClick(item: {
-    _id?: string;
-    category?: string;
-    shopName?: string | null;
-    shopLogo?: string | null;
-  }): void;
-  isLoggedIn: boolean;
+  item: IShop;
 }
 
-export const PromoCard: FC<PromoCardProps> = ({
-  item,
-  onCardClick,
-  isLoggedIn,
-}) => {
+export const PromoCard: FC<PromoCardProps> = ({ item }) => {
+  const { user } = useContext(UserContext);
+
   function handleClick() {
-    onCardClick(item);
+    return item;
   }
 
   return (
     <Card
-      raised={false}
-      sx={{
-        backgroundImage: `url(${item.shopLogo})`,
-        ...cardStyle,
-      }}
+      elevation={0}
+      sx={
+        user
+          ? {
+              backgroundImage: `url(${item.logo})`,
+              ...interactiveCardStyle,
+            }
+          : {
+              backgroundImage: `url(${item.logo})`,
+              ...nonInteractiveCardStyle,
+            }
+      }
     >
-      {isLoggedIn && (
+      {user && (
         <IconButton onClick={handleClick} sx={{ ...iconButtonStyle }}>
           <AddCircleOutlineOutlinedIcon sx={{ ...addIconStyle }} />
         </IconButton>

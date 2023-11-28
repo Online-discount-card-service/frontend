@@ -1,26 +1,73 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Button, Container, IconButton, Stack, Box } from '@mui/material';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
+import { useContext, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Button,
+  Container,
+  IconButton,
+  Stack,
+  Box,
+  Typography,
+} from '@mui/material';
 import CreateIcon from '@mui/icons-material/Create';
 import { BackButton } from '~/features';
 import { CardFull, EditCardForm } from '~/entities';
-import { CardProps } from '~/shared/types';
-import { buttonStyle, topButtonsStyle } from './style';
-import { defaultCards } from '~/shared/mock/default-cards';
-import { defaultCard } from '~/shared/mock/default-card';
+import { Liker } from '~/features';
+import {
+  buttonStyle,
+  topButtonsStyle,
+  likerWrapperStyle,
+  deleteTitleStyle,
+} from './style';
+import { CardsContext } from '~/app';
+import { api } from '~/shared';
 
-//NOTE: Getting Card ID as useParams().id through Router's dynamic route
 export const CardWidget = () => {
-  const id = useParams().id;
-  const card: CardProps =
-    defaultCards.find((card) => card._id === id) || defaultCard;
-  const { cardNumber, barcodeNumber, isLiked } = card;
+  const { cards, setCards } = useContext(CardsContext);
+  const navigate = useNavigate();
   const [isEditActive, setIsEditActive] = useState(false);
+  const [isDeleteActive, setIsDeleteActive] = useState(false);
+  const id = useParams().id;
+  const cardId = Number(id);
+  const card = cards.find((item) => item.card.id.toString() === id) || {
+    card: {
+      id: 0,
+      name: 'Карта не найдена',
+      card_number: '',
+      barcode_number: '',
+    },
+    owner: true,
+    favourite: false,
+  };
+  const isLiked = card.favourite;
 
   const handleEditEnable = () => {
     setIsEditActive(true);
+  };
+
+  const handleEditDisable = () => {
+    setIsEditActive(false);
+  };
+
+  const handleActivateRemoveCard = () => {
+    setIsDeleteActive(true);
+  };
+
+  const handleCancelRemoveCard = () => {
+    setIsDeleteActive(false);
+  };
+
+  const handleRemoveCard = () => {
+    api
+      .deleteCard(cardId)
+      .then(() => {
+        const newCards = cards.filter((card) => card.card.id != cardId);
+        console.log(newCards);
+        return setCards && setCards(newCards);
+      })
+      .then(() => navigate('/'))
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -33,9 +80,9 @@ export const CardWidget = () => {
         <BackButton />
         {!isEditActive && (
           <Stack direction="row">
-            <IconButton sx={{ padding: 0.5 }}>
-              {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-            </IconButton>
+            <Box sx={{ ...likerWrapperStyle }}>
+              <Liker cardId={cardId} isLiked={isLiked} />
+            </Box>
             <IconButton onClick={handleEditEnable} sx={{ padding: 0.5 }}>
               <CreateIcon />
             </IconButton>
@@ -47,21 +94,44 @@ export const CardWidget = () => {
           paddingY: 1.5,
         }}
       >
-        <CardFull {...card} />
+        <CardFull item={card} />
       </Box>
 
       <EditCardForm
         isActive={isEditActive}
-        cardNumberValue={cardNumber ? cardNumber : ''}
-        barcodeNumberValue={barcodeNumber ? barcodeNumber : ''}
+        card={card}
+        handleSubmited={handleEditDisable}
       />
-      {!isEditActive && (
+      {!isEditActive && !isDeleteActive && (
         <Stack spacing={{ xs: 1, sm: 2 }} useFlexGap>
           <Button variant="contained" sx={buttonStyle}>
             Поделиться картой
           </Button>
-          <Button variant="outlined" sx={buttonStyle}>
+          <Button
+            variant="outlined"
+            sx={buttonStyle}
+            onClick={handleActivateRemoveCard}
+          >
             Удалить карту
+          </Button>
+        </Stack>
+      )}
+      {isDeleteActive && (
+        <Stack spacing={{ xs: 1, sm: 2 }} useFlexGap>
+          <Typography sx={deleteTitleStyle}>Удалить карту?</Typography>
+          <Button
+            variant="contained"
+            sx={buttonStyle}
+            onClick={handleRemoveCard}
+          >
+            Да, удалить
+          </Button>
+          <Button
+            variant="outlined"
+            sx={buttonStyle}
+            onClick={handleCancelRemoveCard}
+          >
+            Нет, не удалять
           </Button>
         </Stack>
       )}

@@ -1,35 +1,24 @@
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Box, Stack } from '@mui/material/';
+import { Box, Stack } from '@mui/material/';
 import { CardSmall } from '~/entities';
+import { ICardsContext } from '~/shared';
 import { AddCardButton } from '~/features';
-import { defaultCards } from '~/shared/mock/default-cards';
-import { CardProps } from '~/shared/types';
 import { cardCellStyle } from './style';
 
-type CardsListProps = {
-  items: CardProps[];
-};
+interface CardsListProps {
+  items: ICardsContext | [];
+}
 
-export const CardsList: FC<CardsListProps> = ({ items = defaultCards }) => {
-  const navigate = useNavigate();
-
+export const CardsList: FC<CardsListProps> = ({ items = [] }) => {
   return (
     <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
       <Box key={'add-new-card'} sx={cardCellStyle}>
         <AddCardButton text="Добавить новую карту" />
       </Box>
-      {items.map((item) => {
-        return (
-          <Button
-            key={item._id}
-            sx={cardCellStyle}
-            onClick={() => navigate('/card/123', { relative: 'path' })}
-          >
-            <CardSmall {...item} />
-          </Button>
-        );
-      })}
+      {items &&
+        items.map((item) => {
+          return <CardSmall key={item.card.id} item={item} />;
+        })}
     </Stack>
   );
 };
