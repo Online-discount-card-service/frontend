@@ -7,7 +7,6 @@ export const mainContainerStyle: SxProps = {
   flexDirection: 'column',
   justifyContent: 'flex-start',
   alignItems: 'center',
-  gap: '1rem',
 };
 
 export const paragraphStyle: SxProps = {
@@ -24,9 +23,7 @@ export const paragraphStyle: SxProps = {
 export const coverImgStyle: SxProps = {
   display: 'block',
   width: '100%',
-  minWidth: '320px',
-  minHeight: '240px',
-  aspectRatio: '1 / 0.75',
+  height: 'auto',
   objectFit: 'contain',
   objectPosition: 'center',
   flexShrink: '0',

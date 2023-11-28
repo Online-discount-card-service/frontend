@@ -1,26 +1,12 @@
 import { SxProps } from '@mui/material';
 
-export const nonInteractiveCardStyle: SxProps = {
+export const cardStyle: SxProps = {
   position: 'relative',
   display: 'block',
   width: '100%',
   minWidth: '8.5rem',
   minHeight: '5.875rem',
   aspectRatio: '1 / 0.69',
-  backgroundRepeat: 'no-repeat',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  borderRadius: '.5rem',
-  cursor: 'default',
-};
-
-export const interactiveCardStyle: SxProps = {
-  position: 'relative',
-  display: 'block',
-  width: '100%',
-  minWidth: '8.5rem',
-  minHeight: '5.875rem',
-  aspectRatio: '1 / 0.6924',
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   backgroundPosition: 'center',

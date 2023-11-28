@@ -5,7 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import { MessageContext } from '~/app';
-import { ApiMessageTypes } from '~/shared/enums';
+import { Type } from '~/shared/enums';
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   function Alert(props, ref) {
@@ -55,7 +55,7 @@ export const InfoBar: FC<InfoBarProps> = ({ isOpen }) => {
         onClose={handleClose}
         action={action}
       >
-        {message.type === ApiMessageTypes.error ? (
+        {message.type === Type.error ? (
           <Alert
             onClose={handleClose}
             severity="error"
@@ -66,7 +66,7 @@ export const InfoBar: FC<InfoBarProps> = ({ isOpen }) => {
           >
             {message.message || 'Ошибка!'}
           </Alert>
-        ) : message.type === ApiMessageTypes.info ? (
+        ) : message.type === Type.info ? (
           <Alert
             onClose={handleClose}
             severity="info"

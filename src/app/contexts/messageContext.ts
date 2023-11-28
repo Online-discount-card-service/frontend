@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, createContext } from 'react';
 import { IMessageContext } from '~/shared';
-import { ApiMessageTypes, ApiMessageTargets } from '~/shared/enums';
+import { Type, Target } from '~/shared/enums';
 
 interface IMessageContextValue {
   message: IMessageContext;
@@ -9,8 +9,8 @@ interface IMessageContextValue {
 
 const defaultMessage: IMessageContext = {
   message: '',
-  type: ApiMessageTypes.info,
-  target: ApiMessageTargets.snack,
+  type: Type.info,
+  target: Target.snack,
 };
 
 export const MessageContext = createContext<IMessageContextValue>({

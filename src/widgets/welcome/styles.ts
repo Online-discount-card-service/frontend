@@ -11,10 +11,9 @@ export const mainContainerStyle: SxProps = {
 
 export const coverImgStyle: SxProps = {
   display: 'block',
-  width: '100%',
-  minWidth: '320px',
-  minHeight: '240px',
-  aspectRatio: '1 / 0.75',
+  width: '55.5%',
+  minWidth: '200px',
+  height: 'auto',
   objectFit: 'contain',
   objectPosition: 'center',
   flexShrink: '0',

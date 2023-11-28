@@ -36,7 +36,6 @@ export const Header: FC<HeaderProps> = ({ type }) => {
             variant="outlined"
             color="primary"
             sx={{ border: '#7A757F 1px solid' }}
-            state={{ tab: 0 }}
           >
             Войти
           </Button>
