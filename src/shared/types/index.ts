@@ -107,3 +107,8 @@ export interface IMessageContext {
   type: ApiMessageTypes;
   target: ApiMessageTargets;
 }
+
+export interface IChangePasswordRequest {
+  new_password: string;
+  current_password: string;
+}

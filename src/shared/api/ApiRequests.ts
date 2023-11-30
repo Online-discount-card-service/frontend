@@ -8,6 +8,7 @@ import {
   IShop,
   ISignInRequest,
   ISignUpRequest,
+  IChangePasswordRequest,
   MEDIA_URL,
 } from '..';
 import { ApiError } from '../errors';
@@ -220,5 +221,15 @@ export const ApiRequests = class ApiRequests {
       body: JSON.stringify({ uid, token }),
     };
     return this._requestAuthorizedApi(url, options);
+  }
+
+  setPassword(data: IChangePasswordRequest) {
+    const url = `${this._url}/users/set_password/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestApi(url, options);
   }
 };
