@@ -1,6 +1,7 @@
 import { FC, useEffect } from 'react';
 import { Typography, Box, Link, Stack } from '@mui/material';
 import coverImage from '~/shared/assets/chatbot-bw-1.svg';
+import { AccentButton } from '~/shared/ui';
 import {
   mainContainerStyle,
   coverImgStyle,
@@ -16,6 +17,7 @@ export const RegistrationSuccessWidget: FC<{
   useEffect(() => {
     setTimeout(() => onClose(), 5000);
   }, [onClose]);
+
   return (
     <Stack
       direction="column"
@@ -35,6 +37,12 @@ export const RegistrationSuccessWidget: FC<{
       <Link color="#49454E" sx={linkStyle} onClick={() => onChangeEmail(true)}>
         Изменить почту
       </Link>
+      <AccentButton
+        onClick={() => {
+          onClose();
+        }}
+        children={'Войти'}
+      />
     </Stack>
   );
 };
