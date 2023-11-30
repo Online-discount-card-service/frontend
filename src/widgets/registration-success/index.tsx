@@ -11,7 +11,8 @@ import {
 export const RegistrationSuccessWidget: FC<{
   email: string;
   onClose: () => void;
-}> = ({ email, onClose }) => {
+  onChangeEmail: (arg0: boolean) => void;
+}> = ({ email, onClose, onChangeEmail }) => {
   useEffect(() => {
     setTimeout(() => onClose(), 5000);
   }, [onClose]);
@@ -31,11 +32,7 @@ export const RegistrationSuccessWidget: FC<{
         alt="Робот"
         src={coverImage}
       />
-      <Link
-        color="#49454E"
-        sx={linkStyle}
-        onClick={() => console.log('Экран изменения почты')}
-      >
+      <Link color="#49454E" sx={linkStyle} onClick={() => onChangeEmail(true)}>
         Изменить почту
       </Link>
     </Stack>

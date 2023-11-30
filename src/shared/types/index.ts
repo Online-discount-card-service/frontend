@@ -72,6 +72,10 @@ export interface ISignUpRequest extends ISignInRequest {
   phone_number: string;
 }
 
+export interface IChangeEmailRequest {
+  email: string;
+}
+
 export interface ISignInResponse {
   auth_token: string;
 }

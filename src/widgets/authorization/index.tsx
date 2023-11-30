@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Container, Typography, Box, Tabs, Tab } from '@mui/material';
 import { SignInForm, SignUpForm } from '~/features';
-import { RegistrationSuccessWidget } from '~/widgets';
+import { RegistrationSuccessWidget, ChangeEmailWidget } from '~/widgets';
 import style from './style';
 
 interface TabPanelProps {
@@ -38,6 +38,7 @@ export const AuthWidget = () => {
   const location = useLocation();
   const [currentTab, setCurrentTab] = useState(0);
   const [registredEmail, setRegistredEmail] = useState('');
+  const [wantChangeEmail, setWantChangeEmail] = useState(false);
 
   useEffect(() => {
     setCurrentTab(location.state.tab);
@@ -52,9 +53,16 @@ export const AuthWidget = () => {
     setRegistredEmail('');
   };
 
-  return registredEmail ? (
+  return wantChangeEmail ? (
+    <ChangeEmailWidget
+      oldEmail={registredEmail}
+      setRegistredEmail={setRegistredEmail}
+      setWantChangeEmail={setWantChangeEmail}
+    />
+  ) : registredEmail && wantChangeEmail === false ? (
     <RegistrationSuccessWidget
       email={registredEmail}
+      onChangeEmail={setWantChangeEmail}
       onClose={handleSuccessClose}
     />
   ) : (

@@ -8,6 +8,7 @@ import {
   IShop,
   ISignInRequest,
   ISignUpRequest,
+  IChangeEmailRequest,
   MEDIA_URL,
 } from '..';
 import { ApiError } from '../errors';
@@ -103,6 +104,16 @@ export const ApiRequests = class ApiRequests {
       headers: this._headers,
     };
     return this._requestAuthorizedApi(url, options);
+  }
+
+  changeEmail(data: IChangeEmailRequest) {
+    const url = `${this._url}/users/me/`;
+    const options: IRequestOptions = {
+      method: 'PATCH',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestApi(url, options);
   }
 
   getUser() {
