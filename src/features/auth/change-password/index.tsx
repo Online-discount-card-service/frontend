@@ -67,7 +67,6 @@ export const ChangePasswordForm: FC<{
       schema={schema}
       button={{ label: 'Сохранить', fullWidth: true }}
       submit={submit}
-      defaultValues={}
     />
   );
 };
