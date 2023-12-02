@@ -1,10 +1,10 @@
-import { Type, Target } from '../enums';
+import { ApiMessageTypes } from '../enums';
 
 export interface ICard {
   id: number;
-  shop?: IShop;
+  shop: IShop;
   name: string;
-  pub_date?: string;
+  pub_date: string;
   image?: string | null;
   card_number?: string;
   barcode_number?: string;
@@ -16,17 +16,6 @@ export interface ICardContext {
   card: ICard;
   owner: boolean;
   favourite: boolean;
-}
-
-export interface INewCardResponse {
-  id: number;
-  shop?: IShop;
-  name: string;
-  pub_date?: string;
-  image?: string | null;
-  card_number?: string;
-  barcode_number?: string;
-  encoding_type?: string;
 }
 
 export interface IUserResponse {
@@ -77,15 +66,20 @@ export interface ISignInResponse {
 }
 
 export interface IPostCard {
-  shop: number;
+  shop:
+    | number
+    | {
+        name: string;
+      };
   name: string;
   card_number?: string;
   barcode_number?: string;
   encoding_type?: string;
 }
+
 export interface IPatchCard {
-  shop: number;
-  name: string;
+  shop?: number;
+  name?: string;
   card_number?: string;
   barcode_number?: string;
   encoding_type?: string;
@@ -103,6 +97,5 @@ export interface IPostCardWithShop {
 
 export interface IMessageContext {
   message: string;
-  type: Type;
-  target: Target;
+  type: ApiMessageTypes;
 }

@@ -1,47 +1,45 @@
 import { FC, useContext } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Box, Button, InputAdornment, IconButton } from '@mui/material';
-import { Input } from '~/shared/ui';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ErrorIcon from '@mui/icons-material/Error';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Input } from '~/shared/ui';
 import { cardFormErrors } from '~/shared/lib';
+import { ICardContext, api } from '~/shared';
+import { CardsContext, MessagesContext } from '~/app';
+import { IApiError } from '~/shared/errors';
+import { ApiMessageTypes } from '~/shared/enums';
 import { formStyle, buttonStyle } from './style';
-import { ICardContext, IPatchCard, api } from '~/shared';
-import { CardsContext } from '~/app';
+import { handleFormFieldsErrors } from '~/features/errors';
 
 const schema = z
   .object({
-    cardNumber: z
-      .string({
-        required_error: cardFormErrors.required,
-      })
-      .max(40, { message: cardFormErrors.maxFortySymbols })
-      .regex(/^\d*$/, {
+    card_number: z
+      .string({})
+      .max(40, { message: cardFormErrors.wrongNumber })
+      .regex(/^[A-Za-zА-Яа-яЁё\d_-]*$/, {
         message: cardFormErrors.wrongNumber,
       }),
-    barcodeNumber: z
-      .string({
-        required_error: cardFormErrors.required,
-      })
-      .max(40, { message: cardFormErrors.maxFortySymbols })
-      .regex(/^\d*$/, {
+    barcode_number: z
+      .string({})
+      .max(40, { message: cardFormErrors.wrongNumber })
+      .regex(/^[A-Za-zА-Яа-яЁё\d_-]*$/, {
         message: cardFormErrors.wrongNumber,
       }),
   })
-  .partial()
-  .superRefine(({ barcodeNumber, cardNumber }, ctx) => {
-    if (!barcodeNumber && !cardNumber) {
+  .superRefine(({ barcode_number, card_number }, ctx) => {
+    if (!barcode_number && !card_number) {
       ctx.addIssue({
         code: 'custom',
         message: cardFormErrors.requiredBarcodeOrNumber,
-        path: ['cardNumber'],
+        path: ['card_number'],
       });
       ctx.addIssue({
         code: 'custom',
         message: cardFormErrors.requiredBarcodeOrNumber,
-        path: ['barcodeNumber'],
+        path: ['barcode_number'],
       });
     }
   });
@@ -64,39 +62,85 @@ export const EditCardForm: FC<EditCardFormProps> = ({
   handleSubmited,
   card,
 }) => {
+  const { setMessages } = useContext(MessagesContext);
   const { cards, setCards } = useContext(CardsContext);
   const {
     register,
     handleSubmit,
+    setError,
+    watch,
+    getValues,
     formState: { errors, isValid },
   } = useForm<{ [key: string]: string }>({
     mode: 'onTouched',
     resolver: zodResolver(schema),
     defaultValues: {
-      cardNumber: card.card.card_number,
-      barcodeNumber: card.card.barcode_number,
+      card_number: card.card.card_number,
+      barcode_number: card.card.barcode_number,
     },
   });
 
+  const onCopy = (text: string) => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() =>
+        setMessages((messages) => [
+          {
+            message: 'Номер скопирован в буфер обмена',
+            type: ApiMessageTypes.success,
+          },
+          ...messages,
+        ])
+      )
+      .catch(() =>
+        setMessages((messages) => [
+          {
+            message: 'Ошибка копирования. Попробуйте скопировать номер вручную',
+            type: ApiMessageTypes.error,
+          },
+          ...messages,
+        ])
+      );
+  };
+
+  const handleError = (err: IApiError) => {
+    const fields = Object.keys(getValues());
+    if (err.status === 400 && err.detail && !err.detail.non_field_errors) {
+      handleFormFieldsErrors(err, fields, setError);
+    } else {
+      setMessages((messages) => [
+        {
+          message:
+            err.detail?.non_field_errors.join(' ') ||
+            err.message ||
+            'Ошибка сервера',
+          type: ApiMessageTypes.error,
+        },
+        ...messages,
+      ]);
+    }
+  };
+
   const onSubmit: SubmitHandler<{ [key: string]: string }> = (data) => {
-    const request: IPatchCard = {
-      shop: card.card.shop?.id || 0,
-      name: card.card.shop?.name || '',
-      barcode_number: data.barcodeNumber,
-      card_number: data.cardNumber,
-    };
     api
-      .editCard(request, card.card.id)
+      .editCard(data, card.card.id)
       .then((res) => {
         const newCards = cards.map((card) =>
           res.id != card.card.id ? card : { ...card, card: res }
         );
         return setCards && setCards(newCards);
       })
-      .then(() => handleSubmited())
-      .catch((err) => {
-        console.log(err);
-      });
+      .then(() => {
+        setMessages((messages) => [
+          {
+            message: 'Данные успешно изменены',
+            type: ApiMessageTypes.success,
+          },
+          ...messages,
+        ]);
+        handleSubmited();
+      })
+      .catch(handleError);
   };
 
   return (
@@ -107,7 +151,7 @@ export const EditCardForm: FC<EditCardFormProps> = ({
       onSubmit={handleSubmit(onSubmit)}
     >
       <Input
-        name="cardNumber"
+        name="card_number"
         label="Номер карты"
         type="text"
         autoComplete="no"
@@ -116,8 +160,9 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         register={register}
         errors={errors}
         disabled={!isActive}
+        hideAsterisk={true}
         InputProps={{
-          endAdornment: errors['cardNumber'] ? (
+          endAdornment: errors['card_number'] ? (
             <InputAdornment position="end">
               <ErrorIcon color="error" fontSize="small" />
             </InputAdornment>
@@ -125,6 +170,7 @@ export const EditCardForm: FC<EditCardFormProps> = ({
             <InputAdornment position="end">
               <IconButton
                 aria-label="Кнопка копирования номера карты"
+                onClick={() => onCopy(watch('card_number'))}
                 sx={{
                   padding: 0.2,
                   borderRadius: 0,
@@ -140,7 +186,7 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         }}
       />
       <Input
-        name="barcodeNumber"
+        name="barcode_number"
         label="Номер штрихкода"
         type="text"
         autoComplete="no"
@@ -149,6 +195,7 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         register={register}
         errors={errors}
         disabled={!isActive}
+        hideAsterisk={true}
       />
       {isActive && (
         <Button

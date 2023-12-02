@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { FC, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link, List, ListItem } from '@mui/material';
 import * as z from 'zod';
@@ -8,19 +8,36 @@ import { ISignInRequest, api, authFormErrors } from '~/shared';
 import { AuthForm, signIn } from '..';
 import { listStyle, linkStyle } from './style';
 
-export const SignInForm = () => {
+//NOTE: Sign In form types affect on submit behavior
+// "activation" doesn't redirect after signin
+// "signIn" and default do redirect to homepage
+
+interface ISignInForm {
+  type?: 'activation' | 'signIn';
+  onResetPassword?: () => void;
+}
+
+export const SignInForm: FC<ISignInForm> = ({
+  type = 'signIn',
+  onResetPassword,
+}) => {
   const { setUser } = useContext(UserContext);
   const { setCards } = useContext(CardsContext);
   const navigate = useNavigate();
   const schema = z.object({
     email: z
       .string({
-        required_error: authFormErrors.required,
+        required_error: authFormErrors.requiredEmail,
       })
+      .min(1, { message: authFormErrors.requiredEmail })
+      .min(6, { message: authFormErrors.wrongEmail })
+      .max(256, { message: authFormErrors.wrongEmail })
       .email({ message: authFormErrors.wrongEmail }),
-    password: z.string({
-      required_error: authFormErrors.required,
-    }),
+    password: z
+      .string({
+        required_error: authFormErrors.requiredPassword,
+      })
+      .min(1, { message: authFormErrors.requiredPassword }),
   });
 
   const fields = [
@@ -49,7 +66,7 @@ export const SignInForm = () => {
       email: data.email || '',
       password: data.password || '',
     };
-    signIn(request)
+    return signIn(request)
       .then(() => {
         const userPromise = getUser().then((res) => setUser && setUser(res));
         const cardsPromise = api
@@ -57,8 +74,10 @@ export const SignInForm = () => {
           .then((res) => setCards && setCards(res));
         return Promise.all([userPromise, cardsPromise]);
       })
-      .then(() => navigate('/'))
-      .catch((err) => console.log(err));
+      .then(() => {
+        type !== 'activation' && navigate('/');
+        return;
+      });
   };
 
   return (
@@ -70,7 +89,9 @@ export const SignInForm = () => {
     >
       <List sx={{ ...listStyle }} color="secondary" dense disablePadding>
         <ListItem disableGutters disablePadding dense>
-          <Link sx={{ ...linkStyle }}>Забыли пароль?</Link>
+          <Link onClick={onResetPassword} sx={{ ...linkStyle }}>
+            Забыли пароль?
+          </Link>
         </ListItem>
       </List>
     </AuthForm>

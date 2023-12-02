@@ -4,7 +4,7 @@ import { ShopListContext } from '~/app/contexts';
 import { Box, Container, Typography } from '@mui/material';
 import { AccentButton } from '~/shared/ui';
 import { PromoSlider } from '~/features';
-import coverImage from '~/shared/assets/save_money_bw_1.svg';
+import coverImage from '~/shared/assets/save-money-bw-1.svg';
 import { coverImgStyle, mainContainerStyle, paragraphStyle } from './styles';
 
 export const Home = () => {
@@ -29,13 +29,15 @@ export const Home = () => {
         textAlign="left"
         sx={{ ...paragraphStyle, lineHeight: 1 }}
       >
-        Добавьте в свой электронный кошелёк
+        Добавьте в свой кошелёк
       </Typography>
 
       <PromoSlider items={shops} />
 
       <AccentButton
-        onClick={() => navigate('/auth', { relative: 'path' })}
+        onClick={() =>
+          navigate('/auth', { relative: 'path', state: { tab: 1 } })
+        }
         children={'Попробовать'}
       />
     </Container>

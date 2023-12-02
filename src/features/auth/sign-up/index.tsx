@@ -1,48 +1,58 @@
+import { FC } from 'react';
+import * as z from 'zod';
 import { AuthForm, signUp } from '..';
 import { ISignUpRequest, authFormErrors } from '~/shared';
-import * as z from 'zod';
 
-export const SignUpForm = () => {
+export const SignUpForm: FC<{
+  defaultValues?: object;
+  handleSetEmail: (data: string) => void;
+}> = ({ defaultValues, handleSetEmail }) => {
   const schema = z
     .object({
       name: z
         .string({
-          required_error: authFormErrors.required,
+          required_error: authFormErrors.requiredName,
         })
-        .max(60)
-        .regex(/^[[a-z\][A-Z\][а-я\][А-Я\][Ёё\]\s\-—_]*$/, {
+        .min(1, { message: authFormErrors.requiredName })
+        .max(60, {
+          message: authFormErrors.wrongName,
+        })
+        .regex(/^[A-Za-zА-Яа-яЁё\s!@#$%^&*()_+-=[\]{};:'",.<>?/\\|]*$/, {
           message: authFormErrors.wrongName,
         }),
       email: z
         .string({
-          required_error: authFormErrors.required,
+          required_error: authFormErrors.requiredEmail,
         })
-        .max(30)
+        .min(1, { message: authFormErrors.requiredEmail })
+        .min(6, { message: authFormErrors.wrongEmail })
+        .max(256, { message: authFormErrors.wrongEmail })
         .email({ message: authFormErrors.wrongEmail }),
-      phone: z
+      phone_number: z
         .string({
-          required_error: authFormErrors.required,
+          required_error: authFormErrors.requiredPhone,
         })
-        .min(10, { message: authFormErrors.wrongPhone })
-        .max(10, { message: authFormErrors.wrongPhone })
-        .regex(/^\d+$/, {
+        .min(1, { message: authFormErrors.requiredPhone })
+        .regex(/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/, {
           message: authFormErrors.wrongPhone,
         }),
       password: z
         .string({
-          required_error: authFormErrors.required,
+          required_error: authFormErrors.requiredPassword,
         })
+        .min(1, { message: authFormErrors.requiredPassword })
         .min(8, { message: authFormErrors.wrongPasswordCreated })
-        .max(20, { message: authFormErrors.wrongPasswordCreated })
         .regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()-_+=<>?]{1,}$/,
+          /^(?=.*[a-zа-яё])(?=.*[A-ZА-ЯЁ])(?=.*\d)[a-zA-Zа-яА-ЯёЁ\d\s!@#$%^&*()[\]\-_+=<>?]{1,}$/,
           {
             message: authFormErrors.wrongPasswordCreated,
           }
         ),
-      passwordRepeat: z.string({
-        required_error: authFormErrors.required,
-      }),
+      passwordRepeat: z
+        .string({
+          required_error: authFormErrors.requiredPassword,
+        })
+        .min(1, { message: authFormErrors.requiredPassword }),
     })
     .superRefine(({ passwordRepeat, password }, ctx) => {
       if (passwordRepeat !== password) {
@@ -62,16 +72,20 @@ export const SignUpForm = () => {
       defaultHelperText: 'Как к вам обращаться?',
       autoComplete: 'name',
       required: true,
+      hideAsterisk: true,
     },
     {
-      name: 'phone',
+      name: 'phone_number',
       label: 'Телефон',
-      type: 'tel',
+      type: 'text',
       defaultHelperText: ' ',
-      //NOTE: When mask will be applied can turn on autocomplete
-      // autoComplete: 'tel',
+      autoComplete: 'tel',
       required: true,
       placeholder: '+7 (999) 999-99-99',
+      maskOptions: {
+        mask: '+7 (000) 000-00-00',
+      },
+      hideAsterisk: true,
     },
     {
       name: 'email',
@@ -80,6 +94,7 @@ export const SignUpForm = () => {
       defaultHelperText: ' ',
       autoComplete: 'email',
       required: true,
+      hideAsterisk: true,
     },
     {
       name: 'password',
@@ -88,6 +103,7 @@ export const SignUpForm = () => {
       defaultHelperText: ' ',
       autoComplete: 'new-password',
       required: true,
+      hideAsterisk: true,
     },
     {
       name: 'passwordRepeat',
@@ -96,6 +112,7 @@ export const SignUpForm = () => {
       defaultHelperText: ' ',
       autoComplete: 'new-password',
       required: true,
+      hideAsterisk: true,
     },
   ];
 
@@ -103,12 +120,14 @@ export const SignUpForm = () => {
     const request: ISignUpRequest = {
       name: data.name || '',
       email: data.email || '',
-      phone_number: data.phone || '',
+      phone_number:
+        data.phone_number.replace(/\D/g, '').replace(/^7/, '') || '',
       password: data.password || '',
     };
-    signUp(request)
-      .then((res) => console.log(res || 'Успех'))
-      .catch((err) => console.log(err));
+    console.log(request);
+    return signUp(request).then((res) => {
+      return handleSetEmail(res.email);
+    });
   };
 
   return (
@@ -117,6 +136,7 @@ export const SignUpForm = () => {
       schema={schema}
       button={{ label: 'Далее', fullWidth: true }}
       submit={submit}
+      defaultValues={defaultValues}
     />
   );
 };

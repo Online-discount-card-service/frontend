@@ -1,15 +1,14 @@
 import {
   ICard,
   ICardContext,
-  INewCardResponse,
   IPatchCard,
   IPostCard,
-  IPostCardWithShop,
   IShop,
   ISignInRequest,
   ISignUpRequest,
   MEDIA_URL,
 } from '..';
+import { ApiError } from '../errors';
 
 //NOTE: Function to add full url to images. MEDIA_URL value depends on .env variables and differs on build modes
 const addBaseMediaUrl = (url: string | null | undefined): string => {
@@ -57,26 +56,17 @@ export const ApiRequests = class ApiRequests {
   }
 
   _handleError(res: Response) {
-    let message: string;
     switch (res.status) {
       case 401:
         {
           localStorage.removeItem('token');
-          message = 'Ошибка авторизации';
         }
         break;
-      default: {
-        message = 'Что-то пошло не так';
-      }
     }
     return res
       .json()
       .then((err) =>
-        Promise.reject(
-          new Error(
-            `Ошибка ${res.status}. ${message}. Вот ответ сервера: ${err.detail}`
-          )
-        )
+        Promise.reject(new ApiError(err.message, res.status, err.detail))
       );
   }
 
@@ -106,7 +96,7 @@ export const ApiRequests = class ApiRequests {
       method: 'POST',
       headers: this._headers,
     };
-    return this._requestApi(url, options);
+    return this._requestAuthorizedApi(url, options);
   }
 
   getUser() {
@@ -154,25 +144,23 @@ export const ApiRequests = class ApiRequests {
       headers: this._headers,
       body: JSON.stringify(data),
     };
-    return this._requestAuthorizedApi(url, options).then((res: INewCardResponse) => {
+    return this._requestAuthorizedApi(url, options).then((res: ICard) => {
       res.shop?.logo && (res.shop.logo = addBaseMediaUrl(res.shop.logo));
       return res;
     });
-
   }
 
-  postCardWithShop(data: IPostCardWithShop) {
+  postCardWithShop(data: IPostCard) {
     const url = `${this._url}/cards/new-shop/`;
     const options: IRequestOptions = {
       method: 'POST',
       headers: this._headers,
       body: JSON.stringify(data),
     };
-    return this._requestAuthorizedApi(url, options).then((res: INewCardResponse) => {
+    return this._requestAuthorizedApi(url, options).then((res: ICard) => {
       res.shop?.logo && (res.shop.logo = addBaseMediaUrl(res.shop.logo));
       return res;
     });
-
   }
 
   editCard(data: IPatchCard, id: number) {
@@ -196,11 +184,13 @@ export const ApiRequests = class ApiRequests {
       method: method,
       headers: this._headers,
     };
-    return this._requestAuthorizedApi(url, options).then((res: ICardContext) => {
-      res.card?.shop?.logo &&
-        (res.card.shop.logo = addBaseMediaUrl(res.card.shop.logo));
-      return res;
-    });
+    return this._requestAuthorizedApi(url, options).then(
+      (res: ICardContext) => {
+        res.card?.shop?.logo &&
+          (res.card.shop.logo = addBaseMediaUrl(res.card.shop.logo));
+        return res;
+      }
+    );
   }
 
   deleteCard(id: number) {
@@ -208,6 +198,16 @@ export const ApiRequests = class ApiRequests {
     const options: IRequestOptions = {
       method: 'DELETE',
       headers: this._headers,
+    };
+    return this._requestAuthorizedApi(url, options);
+  }
+
+  activateEmail(uid: string, token: string) {
+    const url = `${this._url}/users/activation/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify({ uid, token }),
     };
     return this._requestAuthorizedApi(url, options);
   }
