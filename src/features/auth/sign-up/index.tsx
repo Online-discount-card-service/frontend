@@ -1,12 +1,20 @@
 import { FC } from 'react';
 import * as z from 'zod';
-import { AuthForm, signUp } from '..';
+import { AuthForm, checkEmail, signUp, TDebouncedFunction, debounce } from '..';
 import { ISignUpRequest, authFormErrors } from '~/shared';
+
+type CheckEmailFn = (email: string) => Promise<boolean>;
 
 export const SignUpForm: FC<{
   defaultValues?: object;
   handleSetEmail: (data: string) => void;
 }> = ({ defaultValues, handleSetEmail }) => {
+  //NOTE: Debounced request to check if email is registred on backend
+  const debouncedCheckEmail: TDebouncedFunction<CheckEmailFn> = debounce(
+    checkEmail,
+    1000
+  );
+
   const schema = z
     .object({
       name: z
@@ -27,7 +35,10 @@ export const SignUpForm: FC<{
         .min(1, { message: authFormErrors.requiredEmail })
         .min(6, { message: authFormErrors.wrongEmail })
         .max(256, { message: authFormErrors.wrongEmail })
-        .email({ message: authFormErrors.wrongEmail }),
+        .email({ message: authFormErrors.wrongEmail })
+        .refine(async (val) => debouncedCheckEmail(val), {
+          message: authFormErrors.emailExists,
+        }),
       phone_number: z
         .string({
           required_error: authFormErrors.requiredPhone,

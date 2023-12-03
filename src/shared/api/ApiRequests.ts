@@ -32,19 +32,25 @@ export const ApiRequests = class ApiRequests {
     };
   }
 
+  //NOTE: Main Api method to fetch data from backend
   _requestApi(url: string, options: IRequestOptions) {
     return fetch(`${url}`, options)
       .then((res) => (res.ok ? res : this._handleError(res)))
       .then((res) => {
-        try {
-          return res.json();
-        } catch (err) {
-          console.log(err);
+        //NOTE: Check for response without body
+        if (res.status === 204) {
           return res;
+        } else {
+          try {
+            return res.json();
+          } catch (err) {
+            return res;
+          }
         }
       });
   }
 
+  //NOTE: Main Api method to fetch with auth token
   _requestAuthorizedApi(url: string, options: IRequestOptions) {
     if (localStorage.getItem('token')) {
       options.headers = {
@@ -210,5 +216,15 @@ export const ApiRequests = class ApiRequests {
       body: JSON.stringify({ uid, token }),
     };
     return this._requestAuthorizedApi(url, options);
+  }
+
+  checkCredentials(data: { email?: string; password?: string }) {
+    const url = `${this._url}/users/pre-check/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestApi(url, options);
   }
 };
