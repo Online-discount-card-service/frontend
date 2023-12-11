@@ -5,6 +5,7 @@ import {
   IconButton,
   Stack,
   Box,
+  Typography,
   DialogTitle,
   DialogContent,
   DialogContentText,
@@ -17,13 +18,13 @@ import {
   containerStyle,
   buttonStyle,
   topButtonsStyle,
-  likerWrapperStyle,
+  paragraphStyle,
   deleteTitleStyle,
   deleteTextStyle,
   deleteItemStyle,
 } from './style';
 import { CardsContext, MessagesContext } from '~/app';
-import { ICardContext, Popup, api } from '~/shared';
+import { ICardContext, Popup, FriendIcon, api } from '~/shared';
 import { IApiError } from '~/shared/errors';
 import { ApiMessageTypes } from '~/shared/enums';
 
@@ -118,22 +119,32 @@ export const CardWidget = () => {
         <BackButton />
         {!isEditActive && (
           <Stack direction="row" spacing={1} useFlexGap>
-            <Box sx={{ ...likerWrapperStyle }}>
-              <Liker cardId={cardId} isLiked={isLiked} />
-            </Box>
+            <Liker cardId={cardId} isLiked={isLiked} isDark={true} />
             <IconButton onClick={handleEditEnable} sx={{ padding: 0 }}>
               <CreateOutlinedIcon />
             </IconButton>
           </Stack>
         )}
       </Stack>
-      <Box
-        sx={{
-          paddingY: 1.5,
-        }}
-      >
+      <Box sx={{ paddingY: 1.5 }}>
         <CardFull item={card} />
       </Box>
+
+      {!card.owner && (
+        <Stack
+          direction="row"
+          spacing={1.5}
+          justifyContent="space-between"
+          alignItems="center"
+          useFlexGap
+          sx={{ paddingY: 1.25 }}
+        >
+          <FriendIcon />
+          <Typography component="p" sx={{ ...paragraphStyle }}>
+            {`Этой картой с вами поделился пользователь Геннадий (gena@mail.ru)`}
+          </Typography>
+        </Stack>
+      )}
 
       <EditCardForm
         isActive={isEditActive}

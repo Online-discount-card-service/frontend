@@ -14,6 +14,7 @@ import notFoundImg from '~/shared/assets/not-found.jpg';
 
 export const UserCards: FC = () => {
   const { cards } = useContext(SortedCardsContext);
+
   return (
     <Stack component="main" useFlexGap spacing={2} sx={mainContainerStyle}>
       <Stack spacing={2} useFlexGap sx={contentStackStyle}>
