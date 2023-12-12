@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import * as z from 'zod';
-import { authFormErrors } from '~/shared';
-import { AuthForm } from '..';
+import { FieldType, validationLengths, validationSchemes } from '~/shared';
+import { AuthForm, requestResetPassword } from '..';
 
 interface IResetPasswordForm {
   handleSetEmail: (data: string) => void;
@@ -11,23 +11,11 @@ export const ResetPasswordForm: FC<IResetPasswordForm> = ({
   handleSetEmail,
 }) => {
   const schema = z.object({
-    email: z
-      .string({
-        required_error: authFormErrors.requiredEmail,
-      })
-      .min(1, { message: authFormErrors.requiredEmail })
-      .email({ message: authFormErrors.wrongEmail }),
-    phone_number: z
-      .string({
-        required_error: authFormErrors.requiredPhone,
-      })
-      .min(1, { message: authFormErrors.requiredPhone })
-      .regex(/^\+7 \(XXX\) XXX-\d{2}-\d{2}$/, {
-        message: authFormErrors.wrongPhone,
-      }),
+    email: validationSchemes.email,
+    phone_last_digits: validationSchemes.phone_last_digits,
   });
 
-  const fields = [
+  const fields: FieldType[] = [
     {
       name: 'email',
       label: 'Email',
@@ -35,9 +23,11 @@ export const ResetPasswordForm: FC<IResetPasswordForm> = ({
       defaultHelperText: ' ',
       autoComplete: 'email',
       required: true,
+      hideAsterisk: true,
+      maxLength: validationLengths.email,
     },
     {
-      name: 'phone_number',
+      name: 'phone_last_digits',
       label: 'Номер телефона',
       type: 'text',
       defaultHelperText: ' ',
@@ -46,20 +36,19 @@ export const ResetPasswordForm: FC<IResetPasswordForm> = ({
       maskOptions: {
         mask: '+7 (XXX) XXX-00-00',
       },
+      hideAsterisk: true,
     },
   ];
 
-  const submit = async (data: { [key: string]: string }) => {
+  const submit = (data: { [key: string]: string }) => {
     const request = {
-      phone_number:
-        data.phone_number.replace(/\D/g, '').replace(/^7/, '') || '',
+      phone_last_digits:
+        data.phone_last_digits.replace(/\D/g, '').replace(/^7/, '') || '',
       email: data.email,
     };
-    console.log(
-      'Запрос для восстановления пароля будет отправлен в виде: ',
-      request
+    return requestResetPassword(request).then(() =>
+      handleSetEmail(request.email)
     );
-    await handleSetEmail(request.email);
   };
 
   return (

@@ -4,4 +4,6 @@ export * from './cardsContext';
 export * from './cardContext';
 export * from './sortedCardsContext';
 export * from './messagesContext';
+export * from './loadingContext';
+export * from './groupsContext';
 export * from './contexts';

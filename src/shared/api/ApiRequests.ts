@@ -6,7 +6,15 @@ import {
   IShop,
   ISignInRequest,
   ISignUpRequest,
+  IRequestResetPassword,
+  IRequestSetNewPassword,
+  IChangePasswordRequest,
+  IChangeEmailRequest,
+  IDeleteUserRequest,
+  IPatchUser,
   MEDIA_URL,
+  IShopRequest,
+  IShareCardRequest,
 } from '..';
 import { ApiError } from '../errors';
 
@@ -36,11 +44,14 @@ export const ApiRequests = class ApiRequests {
     return fetch(`${url}`, options)
       .then((res) => (res.ok ? res : this._handleError(res)))
       .then((res) => {
-        try {
-          return res.json();
-        } catch (err) {
-          console.log(err);
+        if (res.status === 204) {
           return res;
+        } else {
+          try {
+            return res.json();
+          } catch (err) {
+            return res;
+          }
         }
       });
   }
@@ -63,11 +74,9 @@ export const ApiRequests = class ApiRequests {
         }
         break;
     }
-    return res
-      .json()
-      .then((err) =>
-        Promise.reject(new ApiError(err.message, res.status, err.detail))
-      );
+    return res.json().then((err) => {
+      return Promise.reject(new ApiError(err.message, res.status, err.detail));
+    });
   }
 
   signUp(data: ISignUpRequest) {
@@ -120,6 +129,15 @@ export const ApiRequests = class ApiRequests {
         return item;
       })
     );
+  }
+
+  getGroups() {
+    const url = `${this._url}/groups/`;
+    const options: IRequestOptions = {
+      method: 'GET',
+      headers: this._headers,
+    };
+    return this._requestApi(url, options);
   }
 
   getCards() {
@@ -176,6 +194,18 @@ export const ApiRequests = class ApiRequests {
       return res;
     });
   }
+  editShop(data: IShopRequest, id: number) {
+    const url = `${this._url}/shops/${id.toString()}/`;
+    const options: IRequestOptions = {
+      method: 'PATCH',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestAuthorizedApi(url, options).then((res: IShop) => {
+      res.logo && (res.logo = addBaseMediaUrl(res.logo));
+      return res;
+    });
+  }
 
   changeCardLikeStatus(id: number, hasLike: boolean) {
     const url = `${this._url}/cards/${id.toString()}/favorite/`;
@@ -194,7 +224,7 @@ export const ApiRequests = class ApiRequests {
   }
 
   deleteCard(id: number) {
-    const url = `${this._url}/cards/${id}`;
+    const url = `${this._url}/cards/${id}/`;
     const options: IRequestOptions = {
       method: 'DELETE',
       headers: this._headers,
@@ -208,6 +238,76 @@ export const ApiRequests = class ApiRequests {
       method: 'POST',
       headers: this._headers,
       body: JSON.stringify({ uid, token }),
+    };
+    return this._requestAuthorizedApi(url, options);
+  }
+
+  requestResetPassword(data: IRequestResetPassword) {
+    const url = `${this._url}/users/reset_password/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestApi(url, options);
+  }
+
+  setNewPassword(data: IRequestSetNewPassword) {
+    const url = `${this._url}/users/reset_password_confirm/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestApi(url, options);
+  }
+
+  changeEmail(data: IChangeEmailRequest) {
+    const url = `${this._url}/users/me/`;
+    const options: IRequestOptions = {
+      method: 'PATCH',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestAuthorizedApi(url, options);
+  }
+
+  editUser(data: IPatchUser) {
+    const url = `${this._url}/users/me/`;
+    const options: IRequestOptions = {
+      method: 'PATCH',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestAuthorizedApi(url, options);
+  }
+
+  changePassword(data: IChangePasswordRequest) {
+    const url = `${this._url}/users/set_password/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestAuthorizedApi(url, options);
+  }
+
+  deleteUser(data: IDeleteUserRequest, id: number) {
+    const url = `${this._url}/users/${id}/`;
+    const options: IRequestOptions = {
+      method: 'DELETE',
+      headers: this._headers,
+      body: JSON.stringify(data),
+    };
+    return this._requestAuthorizedApi(url, options);
+  }
+
+  shareCard(data: IShareCardRequest, id: number) {
+    const url = `${this._url}/cards/${id}/share/`;
+    const options: IRequestOptions = {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(data),
     };
     return this._requestAuthorizedApi(url, options);
   }

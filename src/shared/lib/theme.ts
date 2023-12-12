@@ -31,6 +31,7 @@ export const lightTheme = createTheme({
       light: '#CAC4CF',
       dark: '#49454E',
       darker: '#1C1B1E',
+      inverse: '#313033',
       contrastText: '#fff',
     },
   },
@@ -38,13 +39,23 @@ export const lightTheme = createTheme({
     fontFamily: ['Roboto', 'Arial', 'sans-serif'].join(','),
     h1: {
       fontSize: '2.125rem',
-      fontWeight: 500,
-      lineHeight: 1.25,
-      letterSpacing: 0,
+      fontWeight: 400,
+      lineHeight: 1,
+      letterSpacing: '-0.01em',
+      color: '#1C1B1E',
+      textAlign: 'left',
       '@media (max-width:600px)': {
         fontSize: '2rem',
       },
-      '@media (max-width:480px)': {
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 400,
+      lineHeight: 1,
+      letterSpacing: 0,
+      color: '#1C1B1E',
+      textAlign: 'left',
+      '@media (max-width:600px)': {
         fontSize: '1.5rem',
       },
     },
@@ -76,9 +87,11 @@ declare module '@mui/material/Button' {
 declare module '@mui/material/styles' {
   interface PaletteColor {
     darker?: string;
+    inverse?: string;
   }
 
   interface SimplePaletteColorOptions {
     darker?: string;
+    inverse?: string;
   }
 }

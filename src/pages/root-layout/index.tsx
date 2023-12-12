@@ -1,20 +1,24 @@
-import { Stack, Box } from '@mui/material';
+import { useContext } from 'react';
+import { Stack } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import { Header } from '~/widgets';
-import { AppFooter } from '~/shared/ui';
+import { AppFooter, Preloader } from '~/shared/ui';
 import { InfoBar } from '~/features';
+import { LoadingContext } from '~/app';
 
 export const RootLayout = () => {
+  const { isLoading } = useContext(LoadingContext);
+
   return (
-    <Stack sx={{ minHeight: '100vh' }} direction="column">
+    <Stack sx={{ minHeight: '100vh', position: 'relative' }} direction="column">
       <Header type="standard" />
-      <Box component="main">
+      <Stack component="main" flexGrow={1}>
         <Outlet />
-      </Box>
+      </Stack>
+      {isLoading && <Preloader />}
       <Stack
         sx={{
           justifyContent: 'flex-end',
-          flexGrow: 1,
         }}
         direction="column"
       >

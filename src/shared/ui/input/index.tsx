@@ -1,6 +1,5 @@
 import { FC, forwardRef } from 'react';
-import { TextField, InputAdornment, InputProps } from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
+import { TextField, InputProps } from '@mui/material';
 import { IMaskInput } from 'react-imask';
 import { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { helperTextStyle } from './style';
@@ -14,6 +13,8 @@ export interface FieldType {
   placeholder?: string;
   hideAsterisk?: boolean;
   required?: boolean;
+  maxLength?: number;
+  maskOptions?: IMask;
 }
 
 export interface InputType extends FieldType {
@@ -23,7 +24,6 @@ export interface InputType extends FieldType {
   onBlur?: () => void;
   disabled?: boolean;
   InputProps?: InputProps;
-  maskOptions?: IMask;
 }
 
 interface IMask {
@@ -45,6 +45,7 @@ export const Input: FC<InputType> = ({
   maskOptions,
   ...props
 }) => {
+  const { onChange, onBlur, ref } = register(name);
   return (
     <TextField
       key={name}
@@ -52,16 +53,15 @@ export const Input: FC<InputType> = ({
       FormHelperTextProps={{ sx: helperTextStyle }}
       error={!!errors[name]}
       InputLabelProps={{ required: !hideAsterisk }}
+      inputRef={ref}
       inputProps={{
-        ...register(name),
+        onChange: onChange,
+        onBlur: onBlur,
+        name: name,
         ...maskOptions,
+        ...(props.maxLength && { maxLength: props.maxLength }),
       }}
       InputProps={{
-        endAdornment: !!errors[name] && (
-          <InputAdornment position="end">
-            <ErrorIcon color="error" fontSize="small" />
-          </InputAdornment>
-        ),
         ...(maskOptions?.mask && {
           inputComponent: Mask as never,
         }),

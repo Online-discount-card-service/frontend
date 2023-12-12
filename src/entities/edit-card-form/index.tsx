@@ -1,34 +1,43 @@
-import { FC, useContext } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { Box, Button, InputAdornment, IconButton } from '@mui/material';
+import { FC, useContext, useEffect, useState } from 'react';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import {
+  Box,
+  Button,
+  InputAdornment,
+  IconButton,
+  Autocomplete,
+  TextField,
+} from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ErrorIcon from '@mui/icons-material/Error';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '~/shared/ui';
 import { cardFormErrors } from '~/shared/lib';
-import { ICardContext, api } from '~/shared';
-import { CardsContext, MessagesContext } from '~/app';
+import {
+  ICardContext,
+  api,
+  validationLengths,
+  validationSchemes,
+} from '~/shared';
+import {
+  CardsContext,
+  GroupListContext,
+  MessagesContext,
+  ShopListContext,
+} from '~/app';
 import { IApiError } from '~/shared/errors';
 import { ApiMessageTypes } from '~/shared/enums';
-import { formStyle, buttonStyle } from './style';
+import { formStyle, buttonStyle, helperTextStyle, listBoxStyle } from './style';
 import { handleFormFieldsErrors } from '~/features/errors';
 
 const schema = z
   .object({
-    card_number: z
-      .string({})
-      .max(40, { message: cardFormErrors.wrongNumber })
-      .regex(/^[A-Za-zА-Яа-яЁё\d_-]*$/, {
-        message: cardFormErrors.wrongNumber,
-      }),
-    barcode_number: z
-      .string({})
-      .max(40, { message: cardFormErrors.wrongNumber })
-      .regex(/^[A-Za-zА-Яа-яЁё\d_-]*$/, {
-        message: cardFormErrors.wrongNumber,
-      }),
+    shop_group: validationSchemes.shop_group,
+    card_number: validationSchemes.card_number,
+    barcode_number: validationSchemes.barcode_number,
   })
+  .partial()
   .superRefine(({ barcode_number, card_number }, ctx) => {
     if (!barcode_number && !card_number) {
       ctx.addIssue({
@@ -63,20 +72,32 @@ export const EditCardForm: FC<EditCardFormProps> = ({
   card,
 }) => {
   const { setMessages } = useContext(MessagesContext);
-  const { cards, setCards } = useContext(CardsContext);
+  const { setCards } = useContext(CardsContext);
+  const { groups } = useContext(GroupListContext);
+  const { shops } = useContext(ShopListContext);
+  const [isUserShop, setIsUserShop] = useState(true);
+  useEffect(
+    () =>
+      shops.find((shop) => shop.name === card.card.shop.name) &&
+      setIsUserShop(false),
+    [card.card.shop.name, shops]
+  );
+
   const {
+    control,
     register,
     handleSubmit,
     setError,
     watch,
     getValues,
-    formState: { errors, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<{ [key: string]: string }>({
     mode: 'onTouched',
     resolver: zodResolver(schema),
     defaultValues: {
       card_number: card.card.card_number,
       barcode_number: card.card.barcode_number,
+      shop_group: card.card.shop.group?.[0]?.name ?? '',
     },
   });
 
@@ -111,7 +132,7 @@ export const EditCardForm: FC<EditCardFormProps> = ({
       setMessages((messages) => [
         {
           message:
-            err.detail?.non_field_errors.join(' ') ||
+            err.detail?.non_field_errors?.join(' ') ||
             err.message ||
             'Ошибка сервера',
           type: ApiMessageTypes.error,
@@ -122,13 +143,29 @@ export const EditCardForm: FC<EditCardFormProps> = ({
   };
 
   const onSubmit: SubmitHandler<{ [key: string]: string }> = (data) => {
+    if (
+      (data.shop_group && !card.card.shop.group?.[0]?.name) ||
+      data.shop_group !== card.card.shop.group?.[0]?.name
+    ) {
+      const newGroupId = groups.find((group) => group.name === data.shop_group)
+        ?.id;
+      const shopRequest = {
+        name: card.card.shop.name,
+        ...(newGroupId && { group: [newGroupId] }),
+      };
+      api.editShop(shopRequest, card.card.shop.id).catch(handleError);
+    }
     api
       .editCard(data, card.card.id)
       .then((res) => {
-        const newCards = cards.map((card) =>
-          res.id != card.card.id ? card : { ...card, card: res }
+        return (
+          setCards &&
+          setCards((cards) =>
+            cards.map((card) =>
+              res.id != card.card.id ? card : { ...card, card: res }
+            )
+          )
         );
-        return setCards && setCards(newCards);
       })
       .then(() => {
         setMessages((messages) => [
@@ -161,6 +198,7 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         errors={errors}
         disabled={!isActive}
         hideAsterisk={true}
+        maxLength={validationLengths.card_number}
         InputProps={{
           endAdornment: errors['card_number'] ? (
             <InputAdornment position="end">
@@ -196,17 +234,53 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         errors={errors}
         disabled={!isActive}
         hideAsterisk={true}
+        maxLength={validationLengths.barcode_number}
+      />
+      <Controller
+        name="shop_group"
+        control={control}
+        render={({
+          field: { value, onChange, onBlur, ref },
+          fieldState: { error },
+        }) => (
+          <Autocomplete
+            onChange={(_event, item) => {
+              onChange(item || '');
+            }}
+            fullWidth
+            //NOTE: null is used when we empty this input via react-hook-form setValue()
+            value={value || null}
+            options={groups.map((option) => option.name)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Категория магазина"
+                error={Boolean(error)}
+                helperText={error ? error.message : ' '}
+                FormHelperTextProps={{ sx: helperTextStyle }}
+                onBlur={onBlur}
+                inputRef={ref}
+                inputProps={{
+                  ...params.inputProps,
+                  maxLength: validationLengths.shop_group,
+                }}
+              />
+            )}
+            ListboxProps={{ sx: listBoxStyle }}
+            disabled={!(isActive && isUserShop)}
+          />
+        )}
       />
       {isActive && (
         <Button
           type="submit"
           variant="contained"
-          disabled={!isValid}
           fullWidth
           sx={buttonStyle}
+          disabled={isSubmitting}
           {...buttonSave}
         >
-          {buttonSave.label}
+          {isSubmitting ? 'Подождите...' : buttonSave.label}
         </Button>
       )}
     </Box>

@@ -1,12 +1,32 @@
-import { FC, useContext } from 'react';
+import { FC, useContext, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import Barcode from 'react-barcode';
-import { Box, TextField, Button, Autocomplete, Card } from '@mui/material';
+import {
+  Box,
+  TextField,
+  Button,
+  Autocomplete,
+  Card,
+  createFilterOptions,
+} from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CardsContext, MessagesContext, ShopListContext } from '~/app';
-import { ICardContext, IShop, Input, cardFormErrors } from '~/shared';
+import {
+  CardsContext,
+  GroupListContext,
+  MessagesContext,
+  ShopListContext,
+} from '~/app';
+import {
+  ICardContext,
+  IGroup,
+  IShop,
+  Input,
+  cardFormErrors,
+  validationLengths,
+  validationSchemes,
+} from '~/shared';
 import {
   formStyle,
   helperTextStyle,
@@ -19,31 +39,18 @@ import { IApiError } from '~/shared/errors';
 import { ApiMessageTypes } from '~/shared/enums';
 import { handleFormFieldsErrors } from '~/features/errors';
 
+const filter = createFilterOptions<IOption>();
+interface IOption extends IShop {
+  inputValue?: string;
+}
+
 //NOTE: In case of clearing the field with the built in close-button, the value becomes NULL, so react-hook-form fires type error. That's why we use 'required' error text as invalid type eroor text in shopName field
 const schema = z
   .object({
-    shop_name: z
-      .string({
-        required_error: cardFormErrors.requiredShopName,
-        invalid_type_error: cardFormErrors.requiredShopName,
-      })
-      .min(1, { message: cardFormErrors.requiredShopName })
-      .max(30)
-      .regex(/^[A-Za-zА-Яа-яЁё\s\d!@#$%^&*()_+-=[\]{};:'",.<>?/\\|]+$/, {
-        message: cardFormErrors.wrongShopName,
-      }),
-    card_number: z
-      .string({})
-      .max(40, { message: cardFormErrors.wrongNumber })
-      .regex(/^[A-Za-zА-Яа-яЁё\d\s_-]*$/, {
-        message: cardFormErrors.wrongNumber,
-      }),
-    barcode_number: z
-      .string({})
-      .max(40, { message: cardFormErrors.wrongNumber })
-      .regex(/^[A-Za-zА-Яа-яЁё\d\s_-]*$/, {
-        message: cardFormErrors.wrongNumber,
-      }),
+    shop_name: validationSchemes.shop_name,
+    shop_group: validationSchemes.shop_group,
+    card_number: validationSchemes.card_number,
+    barcode_number: validationSchemes.barcode_number,
   })
   .partial()
   .required({
@@ -62,14 +69,19 @@ const schema = z
 export const AddCardForm: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isGroupInputBlocked, setIsGroupInputBlocked] = useState(true);
   const { setMessages } = useContext(MessagesContext);
   const { shops } = useContext(ShopListContext);
+  const { groups } = useContext(GroupListContext);
   const { cards, setCards } = useContext(CardsContext);
+  const options: readonly IOption[] = shops;
+
   const {
     control,
     register,
     handleSubmit,
     watch,
+    setValue,
     setError,
     getValues,
     formState: { errors, isSubmitting },
@@ -77,7 +89,8 @@ export const AddCardForm: FC = () => {
     mode: 'onTouched',
     resolver: zodResolver(schema),
     defaultValues: {
-      shop_name: location.state?.shop?.name || null,
+      shop_name: location.state?.shop.name ?? null,
+      shop_group: location.state?.shop.group?.[0].name ?? null,
     },
   });
 
@@ -89,7 +102,7 @@ export const AddCardForm: FC = () => {
       setMessages((messages) => [
         {
           message:
-            err.detail?.non_field_errors.join(' ') ||
+            err.detail?.non_field_errors?.join(' ') ||
             err.message ||
             'Ошибка сервера',
           type: ApiMessageTypes.error,
@@ -103,7 +116,14 @@ export const AddCardForm: FC = () => {
     const shop = shops.find(
       (element: IShop) => element.name === data.shop_name
     );
-    data = { ...data, shop_id: shop?.id.toString() || '' };
+    const group = groups.find(
+      (element: IGroup) => element.name === data.shop_group
+    );
+    data = {
+      ...data,
+      shop_id: shop?.id.toString() || '',
+      group_id: group?.id.toString() || '',
+    };
     new AddCardFormModel(data)
       .createNewCard()
       .then((res) => {
@@ -127,10 +147,6 @@ export const AddCardForm: FC = () => {
       .catch(handleError);
   };
 
-  // useEffect(() => {
-  //   setValue('shop_name', location.state?.shop?.name ?? '');
-  // }, [location.state, setValue]);
-
   return (
     <Box
       component="form"
@@ -146,27 +162,115 @@ export const AddCardForm: FC = () => {
           fieldState: { error },
         }) => (
           <Autocomplete
-            onChange={(_event: unknown, item: string | null) => {
-              onChange(item);
-            }}
             freeSolo
             fullWidth
             autoSelect
-            //NOTE: If undefined, on user input component would switch from uncontrolled to controlled
-            value={value || null}
-            options={shops.map((option) => option.name)}
+            value={value}
+            options={options}
+            renderOption={(props, option) => <li {...props}>{option.name}</li>}
+            onInputChange={(_event, newInputValue) => onChange(newInputValue)}
+            onChange={(_event, newValue) => {
+              if (typeof newValue === 'string') {
+                onChange(newValue);
+                setValue('shop_group', '');
+                setIsGroupInputBlocked(false);
+              } else if (newValue && newValue.inputValue) {
+                setValue('shop_group', '');
+                setIsGroupInputBlocked(false);
+                onChange(newValue.inputValue);
+              } else {
+                onChange(newValue?.name || '');
+                setValue('shop_group', newValue?.group?.[0].name || '');
+                setIsGroupInputBlocked(true);
+              }
+            }}
+            filterOptions={(options, params) => {
+              const filtered = filter(options, params);
+              const { inputValue } = params;
+              //NOTE: Suggest the creation of a new value
+              const isExisting = options.some(
+                (option) => inputValue === option.name
+              );
+              if (inputValue !== '' && !isExisting) {
+                filtered.push({
+                  id: 0,
+                  inputValue,
+                  name: `Добавить: ${inputValue}`,
+                });
+              }
+              return filtered;
+            }}
+            getOptionLabel={(option) => {
+              //NOTE: Value selected with enter, right from the input
+              if (typeof option === 'string') {
+                return option;
+              }
+              //NOTE: Add "xxx" option created dynamically
+              if (option.inputValue) {
+                return option.inputValue;
+              }
+              //NOTE: Regular option
+              return option.name;
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Название магазина"
                 error={Boolean(error)}
-                helperText={error ? error.message : ' '}
+                helperText={
+                  error ? error.message : 'Выберите из списка или введите свой'
+                }
                 FormHelperTextProps={{ sx: helperTextStyle }}
                 onBlur={onBlur}
                 inputRef={ref}
+                inputProps={{
+                  ...params.inputProps,
+                  maxLength: validationLengths.shop_name,
+                }}
               />
             )}
             ListboxProps={{ sx: listBoxStyle }}
+          />
+        )}
+      />
+      <Controller
+        name="shop_group"
+        control={control}
+        render={({
+          field: { value, onChange, onBlur, ref },
+          fieldState: { error },
+        }) => (
+          <Autocomplete
+            onChange={(_event, item) => {
+              onChange(item || '');
+            }}
+            fullWidth
+            //NOTE: null is used when we empty this input via react-hook-form setValue()
+            value={value || null}
+            options={groups.map((option) => option.name)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Категория магазина"
+                error={Boolean(error)}
+                helperText={
+                  error
+                    ? error.message
+                    : isGroupInputBlocked
+                    ? ' '
+                    : 'Добавьте категорию для удобства поиска карты'
+                }
+                FormHelperTextProps={{ sx: helperTextStyle }}
+                onBlur={onBlur}
+                inputRef={ref}
+                inputProps={{
+                  ...params.inputProps,
+                  maxLength: validationLengths.shop_group,
+                }}
+              />
+            )}
+            ListboxProps={{ sx: listBoxStyle }}
+            disabled={isGroupInputBlocked}
           />
         )}
       />
@@ -180,17 +284,19 @@ export const AddCardForm: FC = () => {
         register={register}
         errors={errors}
         hideAsterisk={true}
+        maxLength={validationLengths.card_number}
       />
       <Input
         name="barcode_number"
         label="Номер штрихкода"
         type="text"
         autoComplete="no"
-        defaultHelperText=" "
+        defaultHelperText="Цифры, расположенные под черными штрихами"
         placeholder=""
         register={register}
         errors={errors}
         hideAsterisk={true}
+        maxLength={validationLengths.barcode_number}
       />
       {watch('barcode_number') && (
         <Box sx={{ paddingBottom: '1.25rem' }}>
@@ -211,7 +317,7 @@ export const AddCardForm: FC = () => {
         fullWidth
         sx={buttonStyle}
       >
-        Сохранить
+        {isSubmitting ? 'Подождите...' : 'Сохранить'}
       </Button>
     </Box>
   );

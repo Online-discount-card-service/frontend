@@ -6,6 +6,8 @@ import {
   ShopListContext,
   MessagesContext,
   SortedCardsContext,
+  LoadingContext,
+  GroupListContext,
 } from '.';
 import {
   ICardContext,
@@ -14,6 +16,7 @@ import {
   IUserContext,
   IMessageContext,
   api,
+  IGroupListContext,
 } from '~/shared';
 import { IApiError } from '~/shared/errors';
 import { ApiMessageTypes } from '~/shared/enums';
@@ -29,63 +32,78 @@ export const Contexts: FC<IContexts> = ({ children }) => {
   const [cardData, setCardData] = useState<ICardContext>(Object);
   const [sortedCards, setSortedCards] = useState<ICardsContext>([]);
   const [messagesData, setMessagesData] = useState<IMessageContext[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+  const [groupsData, setGroupsData] = useState<IGroupListContext>([]);
 
   useEffect(() => {
     const handleError = (err: IApiError) => {
       setMessagesData((messagesData) => [
         {
-          message: err.message,
+          message: err.detail?.non_field_errors?.join(' ') || err.message,
           type: ApiMessageTypes.error,
         },
         ...messagesData,
       ]);
     };
-    api
-      .getShops()
+    const shopsPromise = api.getShops();
+    const groupsPromise = api.getGroups();
+    Promise.all([shopsPromise, groupsPromise])
       .then((res) => {
-        setShopsData(res);
+        setShopsData(res[0]);
+        setGroupsData(res[1]);
       })
-      .catch(handleError);
-    if (localStorage.getItem('token')) {
-      api
-        .getUser()
-        .then((res) => {
-          setUserData(res);
-        })
-        .catch(handleError);
-      api
-        .getCards()
-        .then((res) => {
-          setCardsData(res);
-          setSortedCards(res);
-        })
-        .catch(handleError);
-    }
+      .then(() => {
+        if (localStorage.getItem('token')) {
+          const userPromise = api.getUser();
+          const cardsPromise = api.getCards();
+          return Promise.all([userPromise, cardsPromise]).then((res) => {
+            setUserData(res[0]);
+            setCardsData(res[1]);
+            setSortedCards(res[1]);
+          });
+        }
+        return;
+      })
+      .catch(handleError)
+      .finally(() => setIsLoadingData(false));
   }, []);
 
   return (
-    <MessagesContext.Provider
-      value={{ messages: messagesData, setMessages: setMessagesData }}
+    <LoadingContext.Provider
+      value={{ isLoading: isLoadingData, setIsLoading: setIsLoadingData }}
     >
-      <ShopListContext.Provider
-        value={{ shops: shopsData, setShops: setShopsData }}
+      <MessagesContext.Provider
+        value={{ messages: messagesData, setMessages: setMessagesData }}
       >
-        <UserContext.Provider value={{ user: userData, setUser: setUserData }}>
-          <CardsContext.Provider
-            value={{ cards: cardsData, setCards: setCardsData }}
+        <GroupListContext.Provider
+          value={{ groups: groupsData, setGroups: setGroupsData }}
+        >
+          <ShopListContext.Provider
+            value={{ shops: shopsData, setShops: setShopsData }}
           >
-            <CardContext.Provider
-              value={{ card: cardData, setCard: setCardData }}
+            <UserContext.Provider
+              value={{ user: userData, setUser: setUserData }}
             >
-              <SortedCardsContext.Provider
-                value={{ cards: sortedCards, setSortedCards: setSortedCards }}
+              <CardsContext.Provider
+                value={{ cards: cardsData, setCards: setCardsData }}
               >
-                {children}
-              </SortedCardsContext.Provider>
-            </CardContext.Provider>
-          </CardsContext.Provider>
-        </UserContext.Provider>
-      </ShopListContext.Provider>
-    </MessagesContext.Provider>
+                <CardContext.Provider
+                  value={{ card: cardData, setCard: setCardData }}
+                >
+                  <SortedCardsContext.Provider
+                    value={{
+                      cards: sortedCards,
+                      setSortedCards: setSortedCards,
+                    }}
+                  >
+                    {children}
+                  </SortedCardsContext.Provider>
+                </CardContext.Provider>
+              </CardsContext.Provider>
+            </UserContext.Provider>
+          </ShopListContext.Provider>
+        </GroupListContext.Provider>
+      </MessagesContext.Provider>
+    </LoadingContext.Provider>
   );
 };
