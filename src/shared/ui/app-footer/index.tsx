@@ -23,8 +23,8 @@ export const AppFooter = () => {
         >
           <Logo type="full" color="light" />
         </Stack>
-        <Typography variant="body1" color={'#F4EFF4'}>
-          {new Date().getUTCFullYear()}
+        <Typography variant="body1" color={'#F4EFF4'} textAlign="center">
+          {` testing-13-12 ${new Date().getUTCFullYear()}`}
         </Typography>
       </Stack>
     </Box>
