@@ -74,6 +74,55 @@ export const SearchLine = () => {
           {...params}
           placeholder="Поиск"
           onChange={(e) => onInput(e)}
+          variant="filled"
+          sx={{
+            height: '2.5rem',
+            backgroundColor: 'surface.light',
+            borderRadius: '.5rem',
+            '& .css-raw2ne-MuiInputBase-root-MuiFilledInput-root': {
+              backgroundColor: 'transparent',
+            },
+            '& .css-raw2ne-MuiInputBase-root-MuiFilledInput-root:before': {
+              borderBottom: 'none',
+            },
+            '& Mui-focused': {
+              backgroundColor: 'transparent',
+            },
+            '& .css-raw2ne-MuiInputBase-root-MuiFilledInput-root:hover:not(.Mui-disabled, .Mui-error)::before':
+              {
+                borderBottom: 'none',
+              },
+
+            '& .MuiAutocomplete-inputFocused': {
+              left: '50%',
+              borderBottom: 'none',
+            },
+
+            '& .css-1kkal6p-MuiAutocomplete-root:hover': {
+              paddingTop: '0',
+              borderBottom: 'none',
+            },
+            '& .MuiFilledInput-root': {
+              paddingTop: '0',
+              height: '100%',
+              borderRadius: '.5rem',
+            },
+
+            '& ..MuiFilledInput-underline ': {
+              borderBottom: 'none',
+            },
+            '& .css-raw2ne-MuiInputBase-root-MuiFilledInput-root:after  ': {
+              borderBottom: 'none',
+            },
+            '&:focus': {
+              borderBottom: 'none',
+              outline: 'none',
+            },
+            '&:hover': {
+              borderBottom: 'none',
+              outline: 'none',
+            },
+          }}
         />
       )}
     />

@@ -3,7 +3,7 @@ import { SxProps } from '@mui/material';
 export const cardStyle: SxProps = {
   position: 'relative',
   display: 'flex',
-  width: '9.6875rem',
+  width: '9.75rem',
   aspectRatio: 1.435,
   flexDirection: 'column',
   justifyContent: 'flex-end',
@@ -11,10 +11,13 @@ export const cardStyle: SxProps = {
   paddingY: '.625rem',
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
-  borderRadius: '.5rem',
+  borderRadius: '1.125rem',
   color: '#fff',
   boxSizing: 'border-box',
   cursor: 'pointer',
+  '@media (max-width:480px)': {
+    borderRadius: '.5rem',
+  },
 };
 
 export const titleStyle: SxProps = {

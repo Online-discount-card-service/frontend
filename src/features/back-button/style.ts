@@ -1,6 +1,7 @@
 import { SxProps } from '@mui/material';
 
 export const backButtonStyle: SxProps = {
+  color: 'secondary.main',
   justifyContent: 'flex-start',
   fontSize: 12,
   fontWeight: 500,
@@ -9,7 +10,10 @@ export const backButtonStyle: SxProps = {
   padding: 0,
   margin: 0,
   border: 'none',
-  borderRadius: 0,
+  '&:hover': {
+    color: 'primary.main',
+    backgroundColor: 'transparent',
+  },
 };
 
 export const iconStyle: SxProps = {

@@ -1,9 +1,14 @@
-:root {
-  line-height: 1.5;
-  font-weight: 400;
-
-  background-color: #242424;
-
+/*
+#root {
+  display: flex;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  flex-flow: row nowrap;
+  justify-content: center;
+  align-items: flex-start;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  box-sizing: border-box;
 }
+*/
