@@ -1,6 +1,8 @@
 import { Chip } from '@mui/material';
 import { style } from './style';
+/*
 import './style.css';
+*/
 import { Dispatch, FC, SetStateAction, useState } from 'react';
 
 interface IChipButton {

@@ -1,5 +1,6 @@
 import { FC, useContext } from 'react';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { AccentButton } from '~/shared/ui';
 import { MessagesContext, UserContext } from '~/app';
 import {
   IBasicField,
@@ -10,7 +11,6 @@ import {
   validationSchemes,
 } from '~/shared';
 import { ApiMessageTypes } from '~/shared/enums';
-import { buttonStyle } from './style';
 import { ActivateEmailPopup } from '~/entities';
 import * as z from 'zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -107,14 +107,9 @@ export const ReactivateEmail: FC<IReactivateEmail> = ({
           required={true}
           maxLength={validationLengths.email}
         />
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={isSubmitting}
-          sx={buttonStyle}
-        >
+        <AccentButton type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Подождите...' : 'Далее'}
-        </Button>
+        </AccentButton>
       </Stack>
     </ActivateEmailPopup>
   );

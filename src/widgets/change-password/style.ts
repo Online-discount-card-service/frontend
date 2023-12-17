@@ -13,15 +13,6 @@ export const titleStyle: SxProps = {
   paddingBottom: '1.25rem',
 };
 
-export const buttonStyle: SxProps = {
-  borderRadius: '.5rem',
-  fontSize: '.875rem',
-  fontWeight: 500,
-  lineHeight: 1.4,
-  paddingY: 2.25,
-  marginTop: '.5rem',
-};
-
 export const titlePopupStyle: SxProps = {
   padding: 0,
   fontSize: '1.5rem',

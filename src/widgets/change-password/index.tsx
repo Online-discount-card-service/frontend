@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
-  Button,
   DialogTitle,
   DialogContent,
   DialogContentText,
   Stack,
 } from '@mui/material';
+import { AccentButton, OutlineButton } from '~/shared/ui';
 import { UserContext, MessagesContext } from '~/app';
 import {
   BackButtonToUserProfile,
@@ -26,7 +26,6 @@ import {
 import {
   containerStyle,
   titleStyle,
-  buttonStyle,
   titlePopupStyle,
   textPopupStyle,
   itemPopupStyle,
@@ -94,9 +93,9 @@ export const ChangePasswordWidget: FC<{
         Изменить пароль
       </Typography>
       <ChangePasswordForm handleSubmit={handleSubmit} />
-      <Button variant="outlined" sx={buttonStyle} onClick={handlePopupOpen}>
+      <OutlineButton type="button" onClick={handlePopupOpen}>
         Не помню пароль
-      </Button>
+      </OutlineButton>
       <Popup
         open={isConfirmSendPasswordOpen}
         onClose={handlePopupClose}
@@ -109,13 +108,12 @@ export const ChangePasswordWidget: FC<{
           </DialogContentText>
         </DialogContent>
         <Stack useFlexGap>
-          <Button
-            variant="contained"
-            sx={buttonStyle}
+          <AccentButton
+            sx={{ marginTop: '.5rem' }}
             onClick={handleResetPassword}
           >
             Отправить
-          </Button>
+          </AccentButton>
         </Stack>
       </Popup>
     </Container>

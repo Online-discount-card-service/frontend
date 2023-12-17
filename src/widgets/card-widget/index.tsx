@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogContentText,
 } from '@mui/material';
+import { AccentButton, OutlineButton } from '~/shared/ui';
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import { BackButton, CardShareForm } from '~/features';
 import { CardFull, CardSharePopup, EditCardForm } from '~/entities';
@@ -180,21 +181,13 @@ export const CardWidget = () => {
           sx={{ paddingTop: '.75rem' }}
         >
           {card.owner && (
-            <Button
-              variant="contained"
-              sx={buttonStyle}
-              onClick={handleActivateShareCard}
-            >
+            <AccentButton onClick={handleActivateShareCard}>
               Поделиться картой
-            </Button>
+            </AccentButton>
           )}
-          <Button
-            variant="outlined"
-            sx={buttonStyle}
-            onClick={handleActivateRemoveCard}
-          >
+          <OutlineButton onClick={handleActivateRemoveCard}>
             Удалить карту
-          </Button>
+          </OutlineButton>
         </Stack>
       )}
       <Popup
@@ -209,13 +202,7 @@ export const CardWidget = () => {
           </DialogContentText>
         </DialogContent>
         <Stack useFlexGap spacing={1}>
-          <Button
-            variant="contained"
-            sx={buttonStyle}
-            onClick={handleRemoveCard}
-          >
-            Да, удалить
-          </Button>
+          <AccentButton onClick={handleRemoveCard}>Да, удалить</AccentButton>
           <Button
             variant="outlined"
             sx={buttonStyle}

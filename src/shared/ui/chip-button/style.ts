@@ -1,19 +1,30 @@
 import { SxProps } from '@mui/material';
 
 export const style: SxProps = {
+  width: '100%',
   fontSize: '0.875rem',
-  fontWeight: '500',
-  lineHeight: '2rem',
-  cursor: 'pointer',
-  color: 'surface.dark',
-  borderRadius: '0.5rem',
-  borderColor: 'surface.main',
-  '&:hover': {
-    borderColor: 'surface.main',
-    backgroundColor: '#6750A414',
+  lineHeight: '1.43',
+  padding: '1.125rem',
+  borderRadius: '.5rem',
+  textTransform: 'none',
+  backgroundColor: 'trandparent',
+  '& .css-scpnlk-MuiButtonBase-root-MuiChip-root': {
+    backgroundColor: 'secondary.light',
+  },
+  '& .MuiChip-clickable:hover': {
+    backgroundColor: 'secondary.light',
+  },
+  '& .MuiChip-clickableColorDefault': {
+    backgroundColor: 'secondary.light',
+  },
+  '& .css-cu95bj-MuiButtonBase-root-MuiChip-root': {
+    backgroundColor: 'secondary.light',
   },
   '&:active': {
-    borderColor: 'surface.main',
-    backgroundColor: '#6750A41F',
+    boxShadow: 'none',
+    backgroundColor: '#735eab',
+  },
+  '&:focus': {
+    backgroundColor: '#7965af',
   },
 };

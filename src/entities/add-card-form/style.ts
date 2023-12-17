@@ -21,14 +21,6 @@ export const listBoxStyle: SxProps = {
   lineHeight: 1.5,
 };
 
-export const buttonStyle: SxProps = {
-  fontSize: 14,
-  fontWeight: 500,
-  lineHeight: 1.4,
-  paddingY: 2.25,
-  borderRadius: '.5rem',
-};
-
 export const barcodeStyle: SxProps = {
   height: '5.75rem',
   padding: 2,

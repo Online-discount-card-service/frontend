@@ -10,11 +10,11 @@ import {
   validationSchemes,
 } from '~/shared';
 import * as z from 'zod';
-import { Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { AccentButton } from '~/shared/ui';
 import { IApiError } from '~/shared/errors';
 import { handleFormFieldsErrors } from '../errors';
 import { MessagesContext } from '~/app';
-import { buttonStyle } from './style';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ApiMessageTypes } from '~/shared/enums';
 
@@ -107,14 +107,9 @@ export const CardShareForm: FC<ICardShareFormProps> = ({
         required={true}
         maxLength={validationLengths.email}
       />
-      <Button
-        type="submit"
-        variant="contained"
-        disabled={isSubmitting}
-        sx={buttonStyle}
-      >
+      <AccentButton type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Подождите...' : 'Поделиться картой'}
-      </Button>
+      </AccentButton>
     </Stack>
   );
 };

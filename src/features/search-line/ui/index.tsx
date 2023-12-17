@@ -75,8 +75,8 @@ export const SearchLine = () => {
           {...params}
           placeholder="Поиск"
           onChange={(e) => onInput(e)}
+          sx={searchLineStyle}
           variant="filled"
-          sx={{ ...searchLineStyle }}
         />
       )}
     />

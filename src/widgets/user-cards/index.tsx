@@ -5,7 +5,6 @@ import { SearchChips } from '~/features';
 import { CardsList } from '~/widgets';
 import {
   mainContainerStyle,
-  contentStackStyle,
   paragraphStyle,
   noResultsStackStyle,
 } from './styles';
@@ -15,25 +14,26 @@ import notFoundImg from '~/shared/assets/not-found.svg';
 export const UserCards: FC = () => {
   const { cards } = useContext(SortedCardsContext);
   return (
-    <Stack component="main" useFlexGap spacing={2} sx={mainContainerStyle}>
-      <Stack spacing={2} useFlexGap sx={contentStackStyle}>
-        <Typography
-          component="h1"
-          variant="h2"
-          sx={{
-            width: '100%',
-          }}
-        >
-          Мои карты
-        </Typography>
-        <SearchLine />
-      </Stack>
-
+    <Stack
+      component="main"
+      direction="column"
+      useFlexGap
+      spacing={2}
+      sx={mainContainerStyle}
+    >
+      <Typography
+        component="h1"
+        variant="h2"
+        sx={{
+          width: '100%',
+        }}
+      >
+        Мои карты
+      </Typography>
+      <SearchLine />
       <SearchChips />
       {cards.length ? (
-        <Stack spacing={2} useFlexGap sx={contentStackStyle}>
-          <CardsList items={cards || []} />
-        </Stack>
+        <CardsList items={cards || []} />
       ) : (
         <Stack spacing={2} useFlexGap sx={noResultsStackStyle}>
           <Typography textAlign="center" sx={paragraphStyle}>

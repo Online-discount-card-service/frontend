@@ -21,10 +21,3 @@ export const paragraphStyle: SxProps = {
 export const topButtonsStyle: SxProps = {
   padding: '2.5rem 0 1.25rem',
 };
-
-export const buttonStyle: SxProps = {
-  fontSize: '.875rem',
-  fontWeight: 500,
-  lineHeight: 1.4,
-  paddingY: 2.25,
-};
