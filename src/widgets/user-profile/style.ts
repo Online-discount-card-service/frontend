@@ -1,7 +1,7 @@
 import { SxProps } from '@mui/material';
 
 export const containerStyle: SxProps = {
-  paddingX: '1rem',
+  paddingX: { xs: '1rem', sm: '1.5rem' },
   paddingBottom: '2rem',
 };
 
@@ -11,20 +11,6 @@ export const titleStyle: SxProps = {
   fontWeight: 400,
 };
 
-export const paragraphStyle: SxProps = {
-  fontSize: '.875rem',
-  fontWeight: 400,
-  lineHeight: 1.42,
-  paddingTop: '.75rem',
-};
-
 export const topButtonsStyle: SxProps = {
   padding: '2.5rem 0 1.25rem',
-};
-
-export const buttonStyle: SxProps = {
-  fontSize: '.875rem',
-  fontWeight: 500,
-  lineHeight: 1.4,
-  paddingY: 2.25,
 };

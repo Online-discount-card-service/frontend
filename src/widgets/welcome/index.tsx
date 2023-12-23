@@ -1,23 +1,22 @@
-import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Typography } from '@mui/material';
 import { AccentButton } from '~/shared/ui';
 import { PromoSlider } from '~/features';
-import { ShopListContext } from '~/app/contexts';
 import coverImage from '~/shared/assets/payment-bw-1.svg';
 import { coverImgStyle, mainContainerStyle, paragraphStyle } from './styles';
-import { UserContext } from '~/app';
+import { useUser } from '~/shared/store/useUser';
+import { useShops } from '~/shared/store';
 
 export const Welcome = () => {
-  const { user } = useContext(UserContext);
-  const { shops = [] } = useContext(ShopListContext);
+  const user = useUser((state) => state.user);
+  const shops = useShops((state) => state.shops);
   const navigate = useNavigate();
 
   return (
     <Container component="main" sx={{ ...mainContainerStyle }}>
       <Typography
         component="h1"
-        variant="h1"
+        variant="h2"
         textAlign="left"
         sx={{ padding: '0 0 1.5rem', width: '100%' }}
       >
@@ -50,7 +49,7 @@ export const Welcome = () => {
         component="p"
         textAlign="left"
         sx={{
-          padding: '1.5rem 0 0.5rem',
+          padding: '1rem 0 0.5rem',
           ...paragraphStyle,
         }}
       >

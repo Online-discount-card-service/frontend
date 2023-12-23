@@ -13,4 +13,5 @@ export * from './set-new-password';
 export * from './change-email';
 export * from './user-profile';
 export * from './change-password';
-export * from './delete-user';
+export * from './password-reset-request';
+export * from './reactivation-success';

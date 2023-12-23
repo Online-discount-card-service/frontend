@@ -28,7 +28,8 @@ export const lightTheme = createTheme({
     },
     surface: {
       main: '#7A757F',
-      light: '#CAC4CF',
+      light: '#F3EDF7',
+      lighter: '#FDF8FD',
       dark: '#49454E',
       darker: '#1C1B1E',
       inverse: '#313033',
@@ -41,10 +42,9 @@ export const lightTheme = createTheme({
       fontSize: '2.125rem',
       fontWeight: 400,
       lineHeight: 1,
-      letterSpacing: '-0.01em',
       color: '#1C1B1E',
       textAlign: 'left',
-      '@media (max-width:600px)': {
+      '@media (max-width:760px)': {
         fontSize: '2rem',
       },
     },
@@ -61,6 +61,34 @@ export const lightTheme = createTheme({
     },
     button: {
       textTransform: 'none',
+    },
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: (themeParam) => `
+          body {
+          width: 100%;
+          background-color:  #e2dce5;
+          overflow-wrap: break-word;
+          overscroll-behavior: none;
+        }
+        #root {
+          display: flex;
+          width: 100%;
+          min-width: 320px;
+          max-width: 760px;
+          margin: 0 auto;
+          flex-flow: row nowrap;
+          justify-content: center;
+          align-items: flex-start;
+          font-synthesis: none;
+          text-rendering: optimizeLegibility;
+          box-sizing: border-box;
+          background-color: ${themeParam.palette.surface.lighter};
+          overflow: hidden;
+          overscroll-behavior: none;
+        }
+      `,
     },
   },
 });
@@ -88,10 +116,12 @@ declare module '@mui/material/styles' {
   interface PaletteColor {
     darker?: string;
     inverse?: string;
+    lighter?: string;
   }
 
   interface SimplePaletteColorOptions {
     darker?: string;
     inverse?: string;
+    lighter?: string;
   }
 }

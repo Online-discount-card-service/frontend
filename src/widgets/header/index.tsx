@@ -1,11 +1,11 @@
-import { FC, useContext } from 'react';
+import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppBar, Button, IconButton } from '@mui/material';
 import { Logo, CloseButton } from '~/shared/ui';
 import { PermIdentity } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import style from './style';
-import { UserContext } from '~/app';
+import { useUser } from '~/shared/store/useUser';
+import { headerStyle, closeButtonStyle, iconButtonStyle } from './style';
 
 //INFO: 'minimal' for logo only, like on authorization screen, 'standard' for full featured header
 export type HeaderProps = {
@@ -13,17 +13,16 @@ export type HeaderProps = {
 };
 
 export const Header: FC<HeaderProps> = ({ type }) => {
-  const { user } = useContext(UserContext);
+  const user = useUser((state) => state.user);
   const navigate = useNavigate();
 
   return (
     <AppBar
       sx={{
-        ...style.header,
+        ...headerStyle,
         justifyContent: type === 'minimal' ? 'center' : 'space-between',
       }}
       elevation={0}
-      color="inherit"
       position="static"
     >
       <Logo type={type === 'standard' ? 'full' : 'image'} color={'dark'} />
@@ -33,7 +32,7 @@ export const Header: FC<HeaderProps> = ({ type }) => {
             onClick={() => navigate('/user')}
             color="primary"
             size="small"
-            sx={style.iconButton}
+            sx={iconButtonStyle}
           >
             <PermIdentity />
           </IconButton>
@@ -50,7 +49,7 @@ export const Header: FC<HeaderProps> = ({ type }) => {
           </Button>
         ))}
       {type === 'minimal' && (
-        <CloseButton sx={style.closeButton} component={Link} to="/" />
+        <CloseButton sx={closeButtonStyle} component={Link} to="/" />
       )}
     </AppBar>
   );

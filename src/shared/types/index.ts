@@ -5,17 +5,24 @@ export interface ICard {
   shop: IShop;
   name: string;
   pub_date: string;
-  image?: string | null;
   card_number?: string;
   barcode_number?: string;
   encoding_type?: string;
-  usage_counter?: number;
+}
+
+export interface IShared {
+  id: number;
+  name: string;
+  email: string;
 }
 
 export interface ICardContext {
   card: ICard;
+  shared_by?: IShared;
   owner: boolean;
   favourite: boolean;
+  pub_date: string;
+  usage_counter?: number;
 }
 
 export interface IUserResponse {
@@ -25,6 +32,7 @@ export interface IUserResponse {
   username?: string;
   phone_number?: string;
   password?: string;
+  is_active?: boolean;
 }
 
 export interface IUserContext extends IUserResponse {
@@ -44,6 +52,7 @@ export interface IShop {
   color?: string;
   validation?: boolean;
 }
+
 export interface IShopRequest {
   group?: Array<number>;
   name: string;
@@ -89,19 +98,10 @@ export interface IPatchCard {
   encoding_type?: string;
 }
 
-// export interface IPostCardWithShop {
-//   shop: {
-//     name: string;
-//   };
-//   name: string;
-//   card_number?: string;
-//   barcode_number?: string;
-//   encoding_type?: string;
-// }
-
 export interface IMessageContext {
   message: string;
   type: ApiMessageTypes;
+  isShown?: boolean;
 }
 
 export interface IRequestResetPassword {
@@ -126,7 +126,6 @@ export interface IChangeEmailRequest {
 
 export interface IPatchUser {
   name?: string;
-  username?: string;
   email?: string;
   phone_number?: string;
 }
@@ -137,4 +136,13 @@ export interface IDeleteUserRequest {
 
 export interface IShareCardRequest {
   email: string;
+}
+
+export interface IBasicField {
+  [key: string]: string | number | null;
+}
+
+export interface ICredentialsCheckRequest {
+  email?: string;
+  password?: string;
 }

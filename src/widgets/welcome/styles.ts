@@ -4,7 +4,8 @@ export const mainContainerStyle: SxProps = {
   position: 'relative',
   display: 'flex',
   height: '100%',
-  paddingBottom: '1rem',
+  paddingX: { xs: '1rem', sm: '1.5rem' },
+  paddingBottom: { xs: '1.5rem', sm: '2rem' },
   flexDirection: 'column',
   justifyContent: 'flex-start',
   alignItems: 'center',
@@ -23,10 +24,10 @@ export const coverImgStyle: SxProps = {
 
 export const paragraphStyle: SxProps = {
   width: '100%',
-  fontSize: '1.5rem',
-  fontWeight: 500,
+  fontSize: '1.25rem',
+  fontWeight: 400,
   lineHeight: 1.5,
-  letterSpacing: 0,
+  color: 'surface.darker',
   '@media (max-width:600px)': {
     fontSize: '1.125rem',
   },

@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { AuthForm } from '..';
 import {
   FieldType,
+  IBasicField,
   authFormErrors,
   validationLengths,
   validationSchemes,
@@ -26,10 +27,15 @@ export const SetNewPasswordForm: FC<{
       }
     });
 
+  const defaultValues = {
+    password: '',
+    passwordRepeat: '',
+  };
+
   const fields: FieldType[] = [
     {
       name: 'password',
-      label: 'Пароль',
+      label: 'Новый пароль',
       type: 'password',
       defaultHelperText: ' ',
       autoComplete: 'new-password',
@@ -39,7 +45,7 @@ export const SetNewPasswordForm: FC<{
     },
     {
       name: 'passwordRepeat',
-      label: 'Повторный пароль',
+      label: 'Подтверждение пароля',
       type: 'password',
       defaultHelperText: ' ',
       autoComplete: 'new-password',
@@ -48,8 +54,9 @@ export const SetNewPasswordForm: FC<{
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
-    return handleSubmit(data.password);
+  const submit = (data: IBasicField) => {
+    const request = typeof data.password === 'string' ? data.password : '';
+    return handleSubmit(request);
   };
 
   return (
@@ -58,6 +65,7 @@ export const SetNewPasswordForm: FC<{
       schema={schema}
       button={{ label: 'Сохранить', fullWidth: true }}
       submit={submit}
+      defaultValues={defaultValues}
     />
   );
 };

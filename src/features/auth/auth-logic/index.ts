@@ -1,8 +1,8 @@
 import {
+  IDeleteUserRequest,
   IRequestResetPassword,
   ISignInRequest,
   ISignUpRequest,
-  IDeleteUserRequest,
   api,
 } from '~/shared';
 
@@ -22,7 +22,10 @@ export function signIn(data: ISignInRequest) {
 }
 
 export function signOut() {
-  return api.signOut().then(() => localStorage.removeItem('token'));
+  return api.signOut().then((res) => {
+    localStorage.removeItem('token');
+    return res;
+  });
 }
 
 export function requestResetPassword(data: IRequestResetPassword) {
@@ -33,4 +36,14 @@ export function deleteUser(data: IDeleteUserRequest, userId: number) {
   return api
     .deleteUser(data, userId)
     .then(() => localStorage.removeItem('token'));
+}
+
+export function checkEmail(email: string) {
+  return api
+    .checkCredentials({
+      email: email,
+    })
+    .then((res) => {
+      return res ? true : false;
+    });
 }

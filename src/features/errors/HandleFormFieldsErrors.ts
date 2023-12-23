@@ -1,10 +1,16 @@
 import { FieldError } from 'react-hook-form';
 import { IApiError } from '~/shared/errors';
 
-export const handleFormFieldsErrors = (
+type IhandleFormFieldsErrors = (
   error: IApiError,
   fields: Array<string>,
-  setError: (name: string, error: FieldError) => void
+  setError: (key: string, error: FieldError) => void
+) => void;
+
+export const handleFormFieldsErrors: IhandleFormFieldsErrors = (
+  error,
+  fields,
+  setError
 ) => {
   if (error.detail) {
     Object.entries(error.detail).forEach((entry) => {

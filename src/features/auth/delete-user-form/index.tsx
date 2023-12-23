@@ -1,30 +1,40 @@
 import { FC } from 'react';
 import { AuthForm } from '~/features';
-import { FieldType, IDeleteUserRequest, validationSchemes } from '~/shared';
+import {
+  FieldType,
+  IBasicField,
+  IDeleteUserRequest,
+  validationSchemes,
+} from '~/shared';
 import * as z from 'zod';
 
 export const DeleteUserForm: FC<{
   handleSubmit(data: IDeleteUserRequest): Promise<void>;
 }> = ({ handleSubmit }) => {
   const schema = z.object({
-    password: validationSchemes.password_old,
+    current_password: validationSchemes.password_old,
   });
+
+  const defaultValues = {
+    current_password: '',
+  };
 
   const fields: FieldType[] = [
     {
-      name: 'password',
+      name: 'current_password',
       label: 'Пароль',
       type: 'password',
-      defaultHelperText: ' ',
+      defaultHelperText: '',
       autoComplete: 'current-password',
       required: true,
       hideAsterisk: true,
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
+  const submit = (data: IBasicField) => {
     return handleSubmit({
-      current_password: data.password,
+      current_password:
+        typeof data.current_password === 'string' ? data.current_password : '',
     });
   };
 
@@ -32,8 +42,9 @@ export const DeleteUserForm: FC<{
     <AuthForm
       fields={fields}
       schema={schema}
-      button={{ label: 'Удалить', fullWidth: true }}
+      button={{ label: 'Подтвердить', fullWidth: true }}
       submit={submit}
+      defaultValues={defaultValues}
     />
   );
 };

@@ -1,12 +1,17 @@
-import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { UserContext } from '..';
+import { Preloader } from '~/shared';
+import { useLoading } from '~/shared/store';
+import { useUser } from '~/shared/store/useUser';
 
 export const ProtectedRoute = () => {
-  const { user } = useContext(UserContext);
+  const user = useUser((state) => state.user);
+  const isLoading = useLoading((state) => state.isLoading);
 
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-  return <Outlet />;
+  return isLoading ? (
+    <Preloader />
+  ) : user ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/" replace />
+  );
 };

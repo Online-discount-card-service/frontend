@@ -1,16 +1,18 @@
-import { useContext } from 'react';
 import { Stack } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import { Header } from '~/widgets';
 import { AppFooter, Preloader } from '~/shared/ui';
 import { InfoBar } from '~/features';
-import { LoadingContext } from '~/app';
+import { useLoading } from '~/shared/store';
 
 export const RootLayout = () => {
-  const { isLoading } = useContext(LoadingContext);
+  const isLoading = useLoading((state) => state.isLoading);
 
   return (
-    <Stack sx={{ minHeight: '100vh', position: 'relative' }} direction="column">
+    <Stack
+      sx={{ minHeight: '100vh', position: 'relative', width: '100%' }}
+      direction="column"
+    >
       <Header type="standard" />
       <Stack component="main" flexGrow={1}>
         <Outlet />

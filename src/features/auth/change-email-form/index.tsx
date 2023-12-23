@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { AuthForm } from '..';
 import {
   FieldType,
+  IBasicField,
   IChangeEmailRequest,
   validationLengths,
   validationSchemes,
@@ -26,12 +27,13 @@ export const ChangeEmailForm: FC<{
       required: true,
       hideAsterisk: true,
       maxLength: validationLengths.email,
+      preValidate: true,
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
+  const submit = (data: IBasicField) => {
     const request: IChangeEmailRequest = {
-      email: data.email || '',
+      email: typeof data.email === 'string' ? data.email : '',
     };
     return handleSubmit(request);
   };

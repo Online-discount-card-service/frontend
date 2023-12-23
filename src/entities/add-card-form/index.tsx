@@ -1,26 +1,20 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import Barcode from 'react-barcode';
 import {
   Box,
   TextField,
-  Button,
   Autocomplete,
   Card,
   createFilterOptions,
 } from '@mui/material';
+import { AccentButton } from '~/shared/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
-  CardsContext,
-  GroupListContext,
-  MessagesContext,
-  ShopListContext,
-} from '~/app';
-import {
+  IBasicField,
   ICardContext,
-  IGroup,
   IShop,
   Input,
   cardFormErrors,
@@ -31,20 +25,26 @@ import {
   formStyle,
   helperTextStyle,
   listBoxStyle,
-  buttonStyle,
   barcodeStyle,
 } from './style';
 import { AddCardFormModel } from './model';
 import { IApiError } from '~/shared/errors';
-import { ApiMessageTypes } from '~/shared/enums';
 import { handleFormFieldsErrors } from '~/features/errors';
+import { useUser } from '~/shared/store/useUser';
+import { useMessages, useShops } from '~/shared/store';
+
+interface IFields extends IBasicField {
+  shop_name: string | null;
+  shop_group: string | null;
+  card_number: string;
+  barcode_number: string;
+}
 
 const filter = createFilterOptions<IOption>();
 interface IOption extends IShop {
   inputValue?: string;
 }
 
-//NOTE: In case of clearing the field with the built in close-button, the value becomes NULL, so react-hook-form fires type error. That's why we use 'required' error text as invalid type eroor text in shopName field
 const schema = z
   .object({
     shop_name: validationSchemes.shop_name,
@@ -63,6 +63,11 @@ const schema = z
         message: cardFormErrors.requiredBarcodeOrNumber,
         path: ['card_number'],
       });
+      ctx.addIssue({
+        code: 'custom',
+        message: cardFormErrors.requiredBarcodeOrNumber,
+        path: ['barcode_number'],
+      });
     }
   });
 
@@ -70,78 +75,79 @@ export const AddCardForm: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isGroupInputBlocked, setIsGroupInputBlocked] = useState(true);
-  const { setMessages } = useContext(MessagesContext);
-  const { shops } = useContext(ShopListContext);
-  const { groups } = useContext(GroupListContext);
-  const { cards, setCards } = useContext(CardsContext);
+  const addErrorMessage = useMessages((state) => state.addErrorMessage);
+  const addSuccessMessage = useMessages((state) => state.addSuccessMessage);
+  const shops = useShops((state) => state.shops);
+  const groups = useShops((state) => state.groups);
+  const addCard = useUser((state) => state.addCard);
   const options: readonly IOption[] = shops;
 
   const {
     control,
-    register,
+    trigger,
     handleSubmit,
     watch,
     setValue,
     setError,
     getValues,
-    formState: { errors, isSubmitting },
-  } = useForm<{ [key: string]: string }>({
+    formState: { isSubmitting },
+  } = useForm<IFields>({
     mode: 'onTouched',
     resolver: zodResolver(schema),
     defaultValues: {
-      shop_name: location.state?.shop.name ?? null,
-      shop_group: location.state?.shop.group?.[0].name ?? null,
+      shop_name: location.state?.shop?.name ?? null,
+      shop_group: location.state?.shop?.group?.[0]?.name ?? null,
+      card_number: location.state?.card_number ?? '',
+      barcode_number: location.state?.barcode_number ?? '',
     },
   });
+
+  useEffect(
+    () => location.state?.shop && setIsGroupInputBlocked(true),
+    [location.state?.shop]
+  );
+
+  const crossValidationtrigger = () => {
+    trigger(['card_number', 'barcode_number']);
+  };
 
   const handleError = (err: IApiError) => {
     const fields = Object.keys(getValues());
     if (err.status === 400 && err.detail && !err.detail.non_field_errors) {
       handleFormFieldsErrors(err, fields, setError);
     } else {
-      setMessages((messages) => [
-        {
-          message:
-            err.detail?.non_field_errors?.join(' ') ||
-            err.message ||
-            'Ошибка сервера',
-          type: ApiMessageTypes.error,
-        },
-        ...messages,
-      ]);
+      addErrorMessage(
+        err.detail?.non_field_errors?.join(' ') ||
+          err.message ||
+          'Ошибка сервера'
+      );
     }
   };
 
-  const onSubmit: SubmitHandler<{ [key: string]: string }> = (data) => {
-    const shop = shops.find(
-      (element: IShop) => element.name === data.shop_name
-    );
-    const group = groups.find(
-      (element: IGroup) => element.name === data.shop_group
-    );
-    data = {
-      ...data,
+  const onSubmit: SubmitHandler<IFields> = (data) => {
+    const shop = shops.find((element) => element.name === data.shop_name);
+    const group = groups.find((element) => element.name === data.shop_group);
+    const request: { [key: string]: string } = {
+      shop_name: data.shop_name || '',
+      shop_group: data.shop_group || '',
+      card_number: data.card_number,
+      barcode_number: data.barcode_number,
       shop_id: shop?.id.toString() || '',
       group_id: group?.id.toString() || '',
     };
-    new AddCardFormModel(data)
+    new AddCardFormModel(request)
       .createNewCard()
       .then((res) => {
         const newCard: ICardContext = {
           card: res,
           owner: true,
           favourite: false,
+          pub_date: '',
         };
-        return setCards && setCards([...cards, newCard]);
+        return addCard(newCard);
       })
       .then(() => {
-        setMessages((messages) => [
-          {
-            message: 'Карта успешно добавлена',
-            type: ApiMessageTypes.success,
-          },
-          ...messages,
-        ]);
+        addSuccessMessage('Карта успешно добавлена');
         navigate('/');
       })
       .catch(handleError);
@@ -168,20 +174,32 @@ export const AddCardForm: FC = () => {
             value={value}
             options={options}
             renderOption={(props, option) => <li {...props}>{option.name}</li>}
-            onInputChange={(_event, newInputValue) => onChange(newInputValue)}
+            //NOTE: To prevent form send on unfinished input
+            onKeyDown={(_event) => {
+              if (_event.key === 'Enter') {
+                onBlur();
+              }
+            }}
+            //NOTE: Input change and value change are fired separately.
+            // Here we track input change for validation and shop_group toggle.
+            onInputChange={(_event, newInputValue) => {
+              onChange(newInputValue);
+              setValue('shop_group', null);
+              setIsGroupInputBlocked(false);
+            }}
             onChange={(_event, newValue) => {
               if (typeof newValue === 'string') {
                 onChange(newValue);
-                setValue('shop_group', '');
+                setValue('shop_group', null);
                 setIsGroupInputBlocked(false);
-              } else if (newValue && newValue.inputValue) {
-                setValue('shop_group', '');
+              } else if (newValue?.inputValue) {
+                setValue('shop_group', null);
                 setIsGroupInputBlocked(false);
                 onChange(newValue.inputValue);
               } else {
-                onChange(newValue?.name || '');
-                setValue('shop_group', newValue?.group?.[0].name || '');
+                setValue('shop_group', newValue?.group?.[0].name || null);
                 setIsGroupInputBlocked(true);
+                onChange(newValue?.name || null);
               }
             }}
             filterOptions={(options, params) => {
@@ -241,12 +259,12 @@ export const AddCardForm: FC = () => {
           fieldState: { error },
         }) => (
           <Autocomplete
+            autoHighlight
             onChange={(_event, item) => {
-              onChange(item || '');
+              onChange(item);
             }}
             fullWidth
-            //NOTE: null is used when we empty this input via react-hook-form setValue()
-            value={value || null}
+            value={value}
             options={groups.map((option) => option.name)}
             renderInput={(params) => (
               <TextField
@@ -271,6 +289,7 @@ export const AddCardForm: FC = () => {
             )}
             ListboxProps={{ sx: listBoxStyle }}
             disabled={isGroupInputBlocked}
+            noOptionsText="Нет подходящих категорий"
           />
         )}
       />
@@ -281,8 +300,9 @@ export const AddCardForm: FC = () => {
         autoComplete="no"
         defaultHelperText=" "
         placeholder=""
-        register={register}
-        errors={errors}
+        control={control}
+        triggerOnChange={crossValidationtrigger}
+        triggerOnBlur={crossValidationtrigger}
         hideAsterisk={true}
         maxLength={validationLengths.card_number}
       />
@@ -293,8 +313,9 @@ export const AddCardForm: FC = () => {
         autoComplete="no"
         defaultHelperText="Цифры, расположенные под черными штрихами"
         placeholder=""
-        register={register}
-        errors={errors}
+        control={control}
+        triggerOnChange={crossValidationtrigger}
+        triggerOnBlur={crossValidationtrigger}
         hideAsterisk={true}
         maxLength={validationLengths.barcode_number}
       />
@@ -310,15 +331,9 @@ export const AddCardForm: FC = () => {
           </Card>
         </Box>
       )}
-      <Button
-        type="submit"
-        variant="contained"
-        disabled={isSubmitting}
-        fullWidth
-        sx={buttonStyle}
-      >
+      <AccentButton type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Подождите...' : 'Сохранить'}
-      </Button>
+      </AccentButton>
     </Box>
   );
 };

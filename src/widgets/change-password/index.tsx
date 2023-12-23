@@ -1,22 +1,20 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
-  Button,
   DialogTitle,
   DialogContent,
   DialogContentText,
   Stack,
 } from '@mui/material';
-import { UserContext, MessagesContext } from '~/app';
+import { AccentButton, OutlineButton } from '~/shared/ui';
 import {
   BackButtonToUserProfile,
   requestResetPassword,
   ChangePasswordForm,
 } from '~/features';
 import { IApiError } from '~/shared/errors';
-import { ApiMessageTypes } from '~/shared/enums';
 import {
   api,
   IRequestResetPassword,
@@ -26,18 +24,20 @@ import {
 import {
   containerStyle,
   titleStyle,
-  buttonStyle,
   titlePopupStyle,
   textPopupStyle,
   itemPopupStyle,
 } from './style';
+import { useUser } from '~/shared/store/useUser';
+import { useMessages } from '~/shared/store';
 
 export const ChangePasswordWidget: FC<{
   onShowPasswordResetSuccess: () => void;
 }> = ({ onShowPasswordResetSuccess }) => {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
-  const { setMessages } = useContext(MessagesContext);
+  const user = useUser((state) => state.user);
+  const addSuccessMessage = useMessages((state) => state.addSuccessMessage);
+  const addErrorMessage = useMessages((state) => state.addErrorMessage);
   const [isConfirmSendPasswordOpen, setIsConfirmSendPasswordOpen] =
     useState(false);
 
@@ -51,40 +51,26 @@ export const ChangePasswordWidget: FC<{
 
   const handleResetPassword = () => {
     const request: IRequestResetPassword = {
-      phone_last_digits: user?.phone_number?.slice(6) ?? '',
+      phone_last_digits:
+        user?.phone_number?.replace(/\D/g, '').replace(/^7/, '').slice(6) ?? '',
       email: user?.email ?? '',
     };
+    console.log(request);
     return requestResetPassword(request).then(() =>
       onShowPasswordResetSuccess()
     );
-  };
-
-  const handleSuccess = () => {
-    setMessages((messages) => [
-      {
-        message: 'Пароль изменён!',
-        type: ApiMessageTypes.success,
-      },
-      ...messages,
-    ]);
   };
 
   function handleSubmit(data: IChangePasswordRequest) {
     return api
       .changePassword(data)
       .then(() => {
-        handleSuccess();
+        addSuccessMessage('Пароль успешно изменён');
         setTimeout(() => navigate('/', { replace: true }), 3000);
       })
-      .catch((err: IApiError) => {
-        setMessages((messages) => [
-          {
-            message: err.message,
-            type: ApiMessageTypes.error,
-          },
-          ...messages,
-        ]);
-      });
+      .catch((err: IApiError) =>
+        addErrorMessage(err.message || 'Ошибка сервера')
+      );
   }
 
   return (
@@ -94,9 +80,9 @@ export const ChangePasswordWidget: FC<{
         Изменить пароль
       </Typography>
       <ChangePasswordForm handleSubmit={handleSubmit} />
-      <Button variant="outlined" sx={buttonStyle} onClick={handlePopupOpen}>
+      <OutlineButton type="button" onClick={handlePopupOpen}>
         Не помню пароль
-      </Button>
+      </OutlineButton>
       <Popup
         open={isConfirmSendPasswordOpen}
         onClose={handlePopupClose}
@@ -109,13 +95,12 @@ export const ChangePasswordWidget: FC<{
           </DialogContentText>
         </DialogContent>
         <Stack useFlexGap>
-          <Button
-            variant="contained"
-            sx={buttonStyle}
+          <AccentButton
+            sx={{ marginTop: '.5rem' }}
             onClick={handleResetPassword}
           >
             Отправить
-          </Button>
+          </AccentButton>
         </Stack>
       </Popup>
     </Container>

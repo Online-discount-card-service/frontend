@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import {
   Box,
@@ -9,27 +9,36 @@ import {
   TextField,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ErrorIcon from '@mui/icons-material/Error';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '~/shared/ui';
 import { cardFormErrors } from '~/shared/lib';
+import { AccentButton } from '~/shared/ui';
 import {
+  IBasicField,
   ICardContext,
   api,
   validationLengths,
   validationSchemes,
 } from '~/shared';
-import {
-  CardsContext,
-  GroupListContext,
-  MessagesContext,
-  ShopListContext,
-} from '~/app';
 import { IApiError } from '~/shared/errors';
-import { ApiMessageTypes } from '~/shared/enums';
-import { formStyle, buttonStyle, helperTextStyle, listBoxStyle } from './style';
+import { formStyle, helperTextStyle, listBoxStyle } from './style';
 import { handleFormFieldsErrors } from '~/features/errors';
+import { useUser } from '~/shared/store/useUser';
+import { useMessages, useShops } from '~/shared/store';
+interface IFields extends IBasicField {
+  shop_group: string | null;
+  card_number: string;
+  barcode_number: string;
+}
+export interface EditCardFormProps {
+  isActive: boolean;
+  card: ICardContext;
+  buttonSave?: React.ComponentProps<typeof Button> & {
+    label: string;
+  };
+  handleSubmited: () => void;
+}
 
 const schema = z
   .object({
@@ -53,15 +62,6 @@ const schema = z
     }
   });
 
-export interface EditCardFormProps {
-  isActive: boolean;
-  card: ICardContext;
-  buttonSave?: React.ComponentProps<typeof Button> & {
-    label: string;
-  };
-  handleSubmited: () => void;
-}
-
 export const EditCardForm: FC<EditCardFormProps> = ({
   buttonSave = {
     label: 'Сохранить',
@@ -71,10 +71,11 @@ export const EditCardForm: FC<EditCardFormProps> = ({
   handleSubmited,
   card,
 }) => {
-  const { setMessages } = useContext(MessagesContext);
-  const { setCards } = useContext(CardsContext);
-  const { groups } = useContext(GroupListContext);
-  const { shops } = useContext(ShopListContext);
+  const addErrorMessage = useMessages((state) => state.addErrorMessage);
+  const addSuccessMessage = useMessages((state) => state.addSuccessMessage);
+  const editCard = useUser((state) => state.editCard);
+  const shops = useShops((state) => state.shops);
+  const groups = useShops((state) => state.groups);
   const [isUserShop, setIsUserShop] = useState(true);
   useEffect(
     () =>
@@ -85,42 +86,34 @@ export const EditCardForm: FC<EditCardFormProps> = ({
 
   const {
     control,
-    register,
+    trigger,
     handleSubmit,
     setError,
     watch,
     getValues,
-    formState: { errors, isSubmitting },
-  } = useForm<{ [key: string]: string }>({
+    formState: { isSubmitting },
+  } = useForm<IFields>({
     mode: 'onTouched',
     resolver: zodResolver(schema),
     defaultValues: {
-      card_number: card.card.card_number,
-      barcode_number: card.card.barcode_number,
-      shop_group: card.card.shop.group?.[0]?.name ?? '',
+      card_number: card.card.card_number || '',
+      barcode_number: card.card.barcode_number || '',
+      shop_group: card.card.shop.group?.[0]?.name ?? null,
     },
   });
+
+  const crossValidationtrigger = () => {
+    trigger(['card_number', 'barcode_number']);
+  };
 
   const onCopy = (text: string) => {
     navigator.clipboard
       .writeText(text)
-      .then(() =>
-        setMessages((messages) => [
-          {
-            message: 'Номер скопирован в буфер обмена',
-            type: ApiMessageTypes.success,
-          },
-          ...messages,
-        ])
-      )
+      .then(() => addSuccessMessage('Номер скопирован в буфер обмена'))
       .catch(() =>
-        setMessages((messages) => [
-          {
-            message: 'Ошибка копирования. Попробуйте скопировать номер вручную',
-            type: ApiMessageTypes.error,
-          },
-          ...messages,
-        ])
+        addErrorMessage(
+          'Ошибка копирования. Попробуйте скопировать номер вручную'
+        )
       );
   };
 
@@ -129,20 +122,15 @@ export const EditCardForm: FC<EditCardFormProps> = ({
     if (err.status === 400 && err.detail && !err.detail.non_field_errors) {
       handleFormFieldsErrors(err, fields, setError);
     } else {
-      setMessages((messages) => [
-        {
-          message:
-            err.detail?.non_field_errors?.join(' ') ||
-            err.message ||
-            'Ошибка сервера',
-          type: ApiMessageTypes.error,
-        },
-        ...messages,
-      ]);
+      addErrorMessage(
+        err.detail?.non_field_errors?.join(' ') ||
+          err.message ||
+          'Ошибка сервера'
+      );
     }
   };
 
-  const onSubmit: SubmitHandler<{ [key: string]: string }> = (data) => {
+  const onSubmit: SubmitHandler<IFields> = (data) => {
     if (
       (data.shop_group && !card.card.shop.group?.[0]?.name) ||
       data.shop_group !== card.card.shop.group?.[0]?.name
@@ -157,24 +145,9 @@ export const EditCardForm: FC<EditCardFormProps> = ({
     }
     api
       .editCard(data, card.card.id)
-      .then((res) => {
-        return (
-          setCards &&
-          setCards((cards) =>
-            cards.map((card) =>
-              res.id != card.card.id ? card : { ...card, card: res }
-            )
-          )
-        );
-      })
+      .then((res) => editCard(res))
       .then(() => {
-        setMessages((messages) => [
-          {
-            message: 'Данные успешно изменены',
-            type: ApiMessageTypes.success,
-          },
-          ...messages,
-        ]);
+        addSuccessMessage('Данные успешно изменены');
         handleSubmited();
       })
       .catch(handleError);
@@ -194,22 +167,20 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         autoComplete="no"
         defaultHelperText=" "
         placeholder=""
-        register={register}
-        errors={errors}
+        control={control}
+        triggerOnChange={crossValidationtrigger}
+        triggerOnBlur={crossValidationtrigger}
         disabled={!isActive}
         hideAsterisk={true}
         maxLength={validationLengths.card_number}
         InputProps={{
-          endAdornment: errors['card_number'] ? (
-            <InputAdornment position="end">
-              <ErrorIcon color="error" fontSize="small" />
-            </InputAdornment>
-          ) : (
+          endAdornment: !!watch('card_number') && (
             <InputAdornment position="end">
               <IconButton
                 aria-label="Кнопка копирования номера карты"
-                onClick={() => onCopy(watch('card_number'))}
+                onClick={() => onCopy(getValues('card_number'))}
                 sx={{
+                  color: 'black',
                   padding: 0.2,
                   borderRadius: 0,
                   '&:hover': {
@@ -230,8 +201,9 @@ export const EditCardForm: FC<EditCardFormProps> = ({
         autoComplete="no"
         defaultHelperText=" "
         placeholder=""
-        register={register}
-        errors={errors}
+        control={control}
+        triggerOnChange={crossValidationtrigger}
+        triggerOnBlur={crossValidationtrigger}
         disabled={!isActive}
         hideAsterisk={true}
         maxLength={validationLengths.barcode_number}
@@ -244,12 +216,12 @@ export const EditCardForm: FC<EditCardFormProps> = ({
           fieldState: { error },
         }) => (
           <Autocomplete
+            autoHighlight
             onChange={(_event, item) => {
-              onChange(item || '');
+              onChange(item);
             }}
             fullWidth
-            //NOTE: null is used when we empty this input via react-hook-form setValue()
-            value={value || null}
+            value={value}
             options={groups.map((option) => option.name)}
             renderInput={(params) => (
               <TextField
@@ -268,20 +240,19 @@ export const EditCardForm: FC<EditCardFormProps> = ({
             )}
             ListboxProps={{ sx: listBoxStyle }}
             disabled={!(isActive && isUserShop)}
+            noOptionsText="Нет подходящих категорий"
           />
         )}
       />
       {isActive && (
-        <Button
+        <AccentButton
           type="submit"
-          variant="contained"
-          fullWidth
-          sx={buttonStyle}
           disabled={isSubmitting}
+          sx={{ marginBottom: 4 }}
           {...buttonSave}
         >
           {isSubmitting ? 'Подождите...' : buttonSave.label}
-        </Button>
+        </AccentButton>
       )}
     </Box>
   );

@@ -1,49 +1,58 @@
 import { Stack, Typography } from '@mui/material';
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MessagesContext, UserContext } from '~/app';
-import { SignInForm } from '~/features';
-import { api } from '~/shared';
+import { SignInForm, getUser } from '~/features';
+import { Preloader, api } from '~/shared';
 import { stackStyle, titleStyle, paragraphStyle } from './style';
 import { IApiError } from '~/shared/errors';
-import { ApiMessageTypes } from '~/shared/enums';
+import { useUser } from '~/shared/store/useUser';
+import { useLoading, useMessages } from '~/shared/store';
 
 export const Activation = () => {
-  const { setMessages } = useContext(MessagesContext);
-  const { user } = useContext(UserContext);
+  const loading = useLoading((state) => state.loading);
+  const loaded = useLoading((state) => state.loaded);
+  const isLoading = useLoading((state) => state.isLoading);
+  const addErrorMessage = useMessages((state) => state.addErrorMessage);
+  const addSuccessMessage = useMessages((state) => state.addSuccessMessage);
+  const user = useUser((state) => state.user);
+  const setUser = useUser((state) => state.setUser);
   const navigate = useNavigate();
   const { uid, token } = useParams();
 
   useEffect(() => {
-    //TODO: Add here PreLoader for check for login
+    loading();
     const handleError = (err: IApiError) => {
-      setMessages((messages) => [
-        {
-          message: err.detail?.non_field_errors?.join(' ') || err.message,
-          type: ApiMessageTypes.error,
-        },
-        ...messages,
-      ]);
+      addErrorMessage(
+        err.detail?.non_field_errors?.join(' ') ||
+          err.message ||
+          'Ошибка сервера'
+      );
     };
     const handleSuccess = () => {
-      setMessages((messages) => [
-        {
-          message: 'Почта подтверждена',
-          type: ApiMessageTypes.success,
-        },
-        ...messages,
-      ]);
+      addSuccessMessage('Ваш Email успешно подтвержден');
     };
-    if (user && user?.email !== '') {
+    if (user && user.email !== '' && !user.is_active) {
       api
         .activateEmail(uid || '', token || '')
+        .then(() => getUser())
+        .then((res) => setUser(res))
         .then(handleSuccess)
         .catch(handleError)
-        .finally(() => navigate('/', { replace: true }));
+        .finally(() => {
+          navigate('/', { replace: true });
+          handleSuccess();
+          loaded();
+        });
+    } else if (user?.is_active) {
+      handleSuccess();
+      loaded();
     }
-  }, [user, uid, token, navigate, setMessages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-  return (
+  return isLoading ? (
+    <Preloader />
+  ) : (
     <Stack
       component="section"
       direction="column"

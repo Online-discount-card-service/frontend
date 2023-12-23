@@ -3,6 +3,7 @@ import { AuthForm } from '..';
 import {
   authFormErrors,
   FieldType,
+  IBasicField,
   IChangePasswordRequest,
   validationLengths,
   validationSchemes,
@@ -27,6 +28,12 @@ export const ChangePasswordForm: FC<{
         });
       }
     });
+
+  const defaultValues = {
+    current_password: '',
+    new_password: '',
+    new_password_repeat: '',
+  };
 
   const fields: FieldType[] = [
     {
@@ -59,10 +66,12 @@ export const ChangePasswordForm: FC<{
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
+  const submit = (data: IBasicField) => {
     return handleSubmit({
-      new_password: data.new_password,
-      current_password: data.current_password,
+      new_password:
+        typeof data.new_password === 'string' ? data.new_password : '',
+      current_password:
+        typeof data.current_password === 'string' ? data.current_password : '',
     });
   };
 
@@ -72,6 +81,7 @@ export const ChangePasswordForm: FC<{
       schema={schema}
       button={{ label: 'Сохранить', fullWidth: true }}
       submit={submit}
+      defaultValues={defaultValues}
     />
   );
 };

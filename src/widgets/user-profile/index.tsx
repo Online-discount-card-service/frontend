@@ -1,26 +1,32 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Typography, Stack, Button, IconButton } from '@mui/material';
+import { Typography, Stack, IconButton } from '@mui/material';
+import { AccentButton, OutlineButton } from '~/shared/ui';
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
-import { UserContext } from '~/app';
 import {
   UserProfileForm,
   BackButton,
   BackButtonToUserProfile,
   SignOut,
+  DeleteUser,
+  ReactivateEmail,
 } from '~/features';
 import {
   ResetPasswordRequestSuccessWidget,
   ChangePasswordWidget,
-  DeleteUserWidget,
+  ReactivationSuccessWidget,
 } from '~/widgets';
-import { containerStyle, topButtonsStyle, buttonStyle } from './style';
+import { containerStyle, topButtonsStyle } from './style';
+import { useUser } from '~/shared/store/useUser';
 
 export const UserProfileWidget = () => {
   const location = useLocation();
-  const { user } = useContext(UserContext);
+  const user = useUser((state) => state.user);
   const [widgetScreen, setWidgetScreen] = useState('default');
   const [isEditActive, setIsEditActive] = useState(false);
+  const [isByeByePopupOpen, setIsByeByePopupOpen] = useState(false);
+  const [isActivateEmailPopupOpen, setIsActivateEmailPopupOpen] =
+    useState(false);
 
   useEffect(() => {
     setWidgetScreen(location?.state?.widgetScreen ?? 'default');
@@ -34,6 +40,10 @@ export const UserProfileWidget = () => {
     setIsEditActive(false);
   };
 
+  const handleShowDefault = () => {
+    setWidgetScreen('default');
+  };
+
   const handleChangePassword = () => {
     setWidgetScreen('changePassword');
   };
@@ -42,13 +52,28 @@ export const UserProfileWidget = () => {
     setWidgetScreen('resetPasswordRequestSuccess');
   };
 
-  const handleDeleteUser = () => {
-    setWidgetScreen('deleteUser');
+  const handleShowReactivationSuccess = () => {
+    handleHideActivateEmailPopup();
+    setWidgetScreen('reactivationSuccess');
+  };
+
+  const handleShowDeleteUserPopup = () => {
+    setIsByeByePopupOpen(true);
+  };
+
+  const handleHideDeleteUserPopup = () => {
+    setIsByeByePopupOpen(false);
+  };
+
+  const handleShowActivateEmailPopup = () => {
+    setIsActivateEmailPopupOpen(true);
+  };
+
+  const handleHideActivateEmailPopup = () => {
+    setIsActivateEmailPopupOpen(false);
   };
 
   switch (widgetScreen) {
-    case 'deleteUser':
-      return <DeleteUserWidget />;
     case 'changePassword':
       return (
         <ChangePasswordWidget
@@ -56,7 +81,14 @@ export const UserProfileWidget = () => {
         />
       );
     case 'resetPasswordRequestSuccess':
-      return <ResetPasswordRequestSuccessWidget email={user?.email || ''} />;
+      return (
+        <ResetPasswordRequestSuccessWidget
+          email={user?.email || ''}
+          onClose={handleShowDefault}
+        />
+      );
+    case 'reactivationSuccess':
+      return <ReactivationSuccessWidget onClose={handleShowDefault} />;
     case 'default':
       return (
         <Stack component="section" sx={containerStyle}>
@@ -85,6 +117,7 @@ export const UserProfileWidget = () => {
             isActive={isEditActive}
             onChangePassword={handleChangePassword}
             onEditDisable={handleEditDisable}
+            onActivateEmail={handleShowActivateEmailPopup}
           />
           {!isEditActive && (
             <Stack
@@ -92,18 +125,21 @@ export const UserProfileWidget = () => {
               useFlexGap
               sx={{ paddingTop: '.75rem' }}
             >
-              <SignOut element={Button} variant="contained" sx={buttonStyle}>
-                Выйти из аккаунта
-              </SignOut>
-              <Button
-                variant="outlined"
-                sx={buttonStyle}
-                onClick={handleDeleteUser}
-              >
+              <SignOut element={AccentButton}>Выйти из аккаунта</SignOut>
+              <OutlineButton onClick={handleShowDeleteUserPopup}>
                 Удалить аккаунт
-              </Button>
+              </OutlineButton>
             </Stack>
           )}
+          <DeleteUser
+            open={isByeByePopupOpen}
+            onClose={handleHideDeleteUserPopup}
+          />
+          <ReactivateEmail
+            open={isActivateEmailPopupOpen}
+            onClose={handleHideActivateEmailPopup}
+            afterSubmit={handleShowReactivationSuccess}
+          />
         </Stack>
       );
   }

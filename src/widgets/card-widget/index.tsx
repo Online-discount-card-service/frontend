@@ -1,59 +1,49 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Button,
   IconButton,
   Stack,
   Box,
+  Typography,
   DialogTitle,
   DialogContent,
   DialogContentText,
 } from '@mui/material';
+import { AccentButton, OutlineButton } from '~/shared/ui';
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import { BackButton, CardShareForm } from '~/features';
 import { CardFull, CardSharePopup, EditCardForm } from '~/entities';
 import { Liker } from '~/features';
 import {
   containerStyle,
-  buttonStyle,
   topButtonsStyle,
-  likerWrapperStyle,
+  wrapperStyle,
+  paragraphStyle,
   deleteTitleStyle,
   deleteTextStyle,
   deleteItemStyle,
 } from './style';
-import { CardsContext, MessagesContext } from '~/app';
-import { ICardContext, Popup, api } from '~/shared';
+import { Popup, FriendIcon, api } from '~/shared';
 import { IApiError } from '~/shared/errors';
-import { ApiMessageTypes } from '~/shared/enums';
+import { useUser } from '~/shared/store/useUser';
+import { useMessages } from '~/shared/store';
+import { useShallow } from 'zustand/react/shallow';
 
 export const CardWidget = () => {
-  const { setMessages } = useContext(MessagesContext);
-  const { cards, setCards } = useContext(CardsContext);
+  const id = useParams().id;
+  const addErrorMessage = useMessages((state) => state.addErrorMessage);
+  const addSuccessMessage = useMessages((state) => state.addSuccessMessage);
+  const card = useUser(
+    useShallow((state) =>
+      state.cards.find((item) => item.card.id.toString() === id)
+    )
+  );
+  const deleteCard = useUser((state) => state.deleteCard);
   const navigate = useNavigate();
   const [isEditActive, setIsEditActive] = useState(false);
   const [isDeleteActive, setIsDeleteActive] = useState(false);
   const [isShareActive, setIsShareActive] = useState(false);
-  const id = useParams().id;
   const cardId = Number(id);
-  const card: ICardContext = cards.find(
-    (item) => item.card.id.toString() === id
-  ) || {
-    card: {
-      id: 0,
-      shop: {
-        id: 0,
-        name: 'Карта не найдена',
-      },
-      name: 'Карта не найдена',
-      card_number: '',
-      barcode_number: '',
-      pub_date: '',
-    },
-    owner: true,
-    favourite: false,
-  };
-  const isLiked = card.favourite;
 
   const handleEditEnable = () => {
     setIsEditActive(true);
@@ -80,121 +70,112 @@ export const CardWidget = () => {
   };
 
   const handleRemoveCard = () => {
+    const removingCard = card;
     api
       .deleteCard(cardId)
       .then(() => {
-        const newCards = cards.filter((card) => card.card.id != cardId);
-        return setCards && setCards(newCards);
+        return deleteCard(cardId);
       })
       .then(() => {
-        setMessages((messages) => [
-          {
-            message: 'Карта удалена',
-            type: ApiMessageTypes.success,
-          },
-          ...messages,
-        ]);
+        addSuccessMessage(
+          `Карта №${
+            removingCard?.card.card_number || removingCard?.card.barcode_number
+          } удалена`
+        );
         navigate('/');
       })
       .catch((err: IApiError) => {
-        setMessages((messages) => [
-          {
-            message: err.detail?.non_field_errors?.join(' ') || err.message,
-            type: ApiMessageTypes.error,
-          },
-          ...messages,
-        ]);
+        addErrorMessage(
+          err.detail?.non_field_errors?.join(' ') ||
+            err.message ||
+            'Ошибка сервера'
+        );
       });
   };
 
   return (
-    <Stack useFlexGap sx={containerStyle}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={topButtonsStyle}
-      >
-        <BackButton />
-        {!isEditActive && (
-          <Stack direction="row" spacing={1} useFlexGap>
-            <Box sx={{ ...likerWrapperStyle }}>
-              <Liker cardId={cardId} isLiked={isLiked} />
-            </Box>
-            <IconButton onClick={handleEditEnable} sx={{ padding: 0 }}>
-              <CreateOutlinedIcon />
-            </IconButton>
+    card && (
+      <Stack useFlexGap sx={containerStyle}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={topButtonsStyle}
+        >
+          <BackButton />
+          {!isEditActive && (
+            <Stack direction="row" spacing={1} useFlexGap>
+              <Liker cardId={cardId} isLiked={card.favourite} isDark={true} />
+              {card.owner && (
+                <IconButton onClick={handleEditEnable} sx={{ padding: 0 }}>
+                  <CreateOutlinedIcon />
+                </IconButton>
+              )}
+            </Stack>
+          )}
+        </Stack>
+        <Box sx={{ paddingY: 1.5 }}>
+          <CardFull item={card} />
+        </Box>
+
+        {!card.owner && (
+          <Stack
+            direction="row"
+            spacing={1.5}
+            justifyContent="flex-center"
+            alignItems="center"
+            alignSelf="center"
+            useFlexGap
+            sx={wrapperStyle}
+          >
+            <FriendIcon />
+            <Typography component="p" sx={{ ...paragraphStyle }}>
+              {`Этой картой с вами поделился пользователь ${card.shared_by?.name} (${card.shared_by?.email})`}
+            </Typography>
           </Stack>
         )}
-      </Stack>
-      <Box
-        sx={{
-          paddingY: 1.5,
-        }}
-      >
-        <CardFull item={card} />
-      </Box>
 
-      <EditCardForm
-        isActive={isEditActive}
-        card={card}
-        handleSubmited={handleEditDisable}
-      />
-      {!isEditActive && (
-        <Stack
-          spacing={{ xs: 1, sm: 2 }}
-          useFlexGap
-          sx={{ paddingTop: '.75rem' }}
-        >
-          {card.owner && (
-            <Button
-              variant="contained"
-              sx={buttonStyle}
-              onClick={handleActivateShareCard}
-            >
+        <EditCardForm
+          isActive={isEditActive}
+          card={card}
+          handleSubmited={handleEditDisable}
+        />
+        {!isEditActive && (
+          <Stack
+            spacing={{ xs: 1, sm: 2 }}
+            useFlexGap
+            sx={{ paddingTop: '.75rem' }}
+          >
+            <AccentButton onClick={handleActivateShareCard}>
               Поделиться картой
-            </Button>
-          )}
-          <Button
-            variant="outlined"
-            sx={buttonStyle}
-            onClick={handleActivateRemoveCard}
-          >
-            Удалить карту
-          </Button>
-        </Stack>
-      )}
-      <Popup
-        open={isDeleteActive}
-        onClose={handleCancelRemoveCard}
-        showCloseButton={false}
-      >
-        <DialogTitle sx={deleteTitleStyle}>Удалить карту?</DialogTitle>
-        <DialogContent sx={deleteItemStyle}>
-          <DialogContentText sx={deleteTextStyle}>
-            Восстановить карту будет невозможно
-          </DialogContentText>
-        </DialogContent>
-        <Stack useFlexGap spacing={1}>
-          <Button
-            variant="contained"
-            sx={buttonStyle}
-            onClick={handleRemoveCard}
-          >
-            Да, удалить
-          </Button>
-          <Button
-            variant="outlined"
-            sx={buttonStyle}
-            onClick={handleCancelRemoveCard}
-          >
-            Нет, не удалять
-          </Button>
-        </Stack>
-      </Popup>
-      <CardSharePopup open={isShareActive} onClose={handleCancelShareCard}>
-        <CardShareForm card={card.card} afterSubmit={handleCancelShareCard} />
-      </CardSharePopup>
-    </Stack>
+            </AccentButton>
+            <OutlineButton onClick={handleActivateRemoveCard}>
+              Удалить карту
+            </OutlineButton>
+          </Stack>
+        )}
+        <Popup
+          open={isDeleteActive}
+          onClose={handleCancelRemoveCard}
+          showCloseButton={false}
+        >
+          <DialogTitle sx={deleteTitleStyle}>Удалить карту?</DialogTitle>
+          <DialogContent sx={deleteItemStyle}>
+            <DialogContentText sx={deleteTextStyle}>
+              Восстановить карту будет невозможно
+            </DialogContentText>
+          </DialogContent>
+          <Stack useFlexGap spacing={1}>
+            <AccentButton onClick={handleRemoveCard}>Да, удалить</AccentButton>
+            <OutlineButton onClick={handleCancelRemoveCard}>
+              Нет, не удалять
+            </OutlineButton>
+          </Stack>
+        </Popup>
+        <CardSharePopup open={isShareActive} onClose={handleCancelShareCard}>
+          <CardShareForm card={card.card} afterSubmit={handleCancelShareCard} />
+        </CardSharePopup>
+      </Stack>
+    )
   );
 };

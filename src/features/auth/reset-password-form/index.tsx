@@ -1,6 +1,11 @@
 import { FC } from 'react';
 import * as z from 'zod';
-import { FieldType, validationLengths, validationSchemes } from '~/shared';
+import {
+  FieldType,
+  IBasicField,
+  validationLengths,
+  validationSchemes,
+} from '~/shared';
 import { AuthForm, requestResetPassword } from '..';
 
 interface IResetPasswordForm {
@@ -15,6 +20,11 @@ export const ResetPasswordForm: FC<IResetPasswordForm> = ({
     phone_last_digits: validationSchemes.phone_last_digits,
   });
 
+  const defaultValues = {
+    email: '',
+    phone_last_digits: '',
+  };
+
   const fields: FieldType[] = [
     {
       name: 'email',
@@ -28,23 +38,27 @@ export const ResetPasswordForm: FC<IResetPasswordForm> = ({
     },
     {
       name: 'phone_last_digits',
-      label: 'Номер телефона',
+      label: 'Телефон',
       type: 'text',
       defaultHelperText: ' ',
       required: true,
       placeholder: '+7 (XXX) XXX-99-99',
       maskOptions: {
         mask: '+7 (XXX) XXX-00-00',
+        unmask: false,
+        overwrite: true,
       },
       hideAsterisk: true,
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
+  const submit = (data: IBasicField) => {
     const request = {
       phone_last_digits:
-        data.phone_last_digits.replace(/\D/g, '').replace(/^7/, '') || '',
-      email: data.email,
+        typeof data.phone_last_digits === 'string'
+          ? data.phone_last_digits.replace(/\D/g, '').replace(/^7/, '')
+          : '',
+      email: typeof data.email === 'string' ? data.email : '',
     };
     return requestResetPassword(request).then(() =>
       handleSetEmail(request.email)
@@ -57,6 +71,7 @@ export const ResetPasswordForm: FC<IResetPasswordForm> = ({
       schema={schema}
       button={{ label: 'Далее', fullWidth: true }}
       submit={submit}
+      defaultValues={defaultValues}
     />
   );
 };

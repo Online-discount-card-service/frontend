@@ -5,3 +5,6 @@ export * from './edit-card-form';
 export * from './input-password';
 export * from './promo-card';
 export * from './card-share-popup';
+export * from './user-delete-popup';
+export * from './activate-email-popup';
+export * from './contexts';

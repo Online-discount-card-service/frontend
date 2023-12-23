@@ -1,7 +1,7 @@
 import { FC, forwardRef } from 'react';
 import { TextField, InputProps } from '@mui/material';
-import { IMaskInput } from 'react-imask';
-import { FieldErrors, UseFormRegister } from 'react-hook-form';
+import { IMaskInput, ReactMaskOpts } from 'react-imask';
+import { Control, Controller } from 'react-hook-form';
 import { helperTextStyle } from './style';
 
 export interface FieldType {
@@ -14,61 +14,88 @@ export interface FieldType {
   hideAsterisk?: boolean;
   required?: boolean;
   maxLength?: number;
-  maskOptions?: IMask;
+  maskOptions?: ReactMaskOpts;
+  preValidate?: boolean;
 }
 
 export interface InputType extends FieldType {
-  register: UseFormRegister<{ [key: string]: string }>;
-  errors: FieldErrors<{ [key: string]: string }>;
-  onFocus?: () => void;
-  onBlur?: () => void;
+  triggerOnChange?: () => void;
+  triggerOnBlur?: () => void;
   disabled?: boolean;
   InputProps?: InputProps;
+  preValidator?: () => void;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control?: Control<any>;
 }
 
-interface IMask {
-  mask?: string;
-  radix?: string;
-  unmask?: boolean | 'typed';
-}
-
-const Mask = forwardRef<HTMLInputElement, IMask>(function Mask(props, ref) {
-  return <IMaskInput {...props} inputRef={ref} overwrite />;
-});
+const Mask = forwardRef<HTMLInputElement, ReactMaskOpts>(
+  function Mask(props, ref) {
+    return <IMaskInput {...props} inputRef={ref} />;
+  }
+);
 
 export const Input: FC<InputType> = ({
   name,
   defaultHelperText,
-  register,
-  errors,
+  control,
   hideAsterisk,
   maskOptions,
+  triggerOnChange,
+  triggerOnBlur,
+  preValidator,
+  preValidate,
   ...props
 }) => {
-  const { onChange, onBlur, ref } = register(name);
   return (
-    <TextField
+    <Controller
+      control={control}
       key={name}
-      helperText={errors[name] ? errors[name]?.message : defaultHelperText}
-      FormHelperTextProps={{ sx: helperTextStyle }}
-      error={!!errors[name]}
-      InputLabelProps={{ required: !hideAsterisk }}
-      inputRef={ref}
-      inputProps={{
-        onChange: onChange,
-        onBlur: onBlur,
-        name: name,
-        ...maskOptions,
-        ...(props.maxLength && { maxLength: props.maxLength }),
-      }}
-      InputProps={{
-        ...(maskOptions?.mask && {
-          inputComponent: Mask as never,
-        }),
-      }}
-      variant="outlined"
-      fullWidth
-      {...props}
+      name={name}
+      render={({
+        field: { onBlur, onChange, value, ref },
+        fieldState: { error },
+      }) => (
+        <TextField
+          value={value}
+          inputRef={ref}
+          helperText={error ? error?.message : defaultHelperText}
+          FormHelperTextProps={{ sx: helperTextStyle }}
+          error={Boolean(error)}
+          InputLabelProps={{ required: !hideAsterisk, shrink: Boolean(value) }}
+          inputProps={{
+            ...(maskOptions
+              ? {
+                  onAccept: (value: string) => {
+                    onChange({ target: { name: name, value } });
+                    triggerOnChange && triggerOnChange();
+                  },
+                }
+              : {
+                  onChange: (e) => {
+                    onChange(e);
+                    triggerOnChange && triggerOnChange();
+                  },
+                }),
+            onBlur: () => {
+              onBlur();
+              triggerOnBlur && triggerOnBlur();
+              preValidator && preValidate && preValidator();
+            },
+            name: name,
+            ...maskOptions,
+            ...(props.maxLength && { maxLength: props.maxLength }),
+          }}
+          InputProps={{
+            ...(maskOptions?.mask && {
+              inputComponent: Mask as never,
+            }),
+          }}
+          variant="outlined"
+          fullWidth
+          {...props}
+        />
+      )}
     />
   );
 };

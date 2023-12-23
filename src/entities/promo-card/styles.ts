@@ -6,12 +6,15 @@ export const nonInteractiveCardStyle: SxProps = {
   width: '100%',
   minWidth: '8.5rem',
   minHeight: '5.875rem',
-  aspectRatio: '1 / 0.69',
+  aspectRatio: '1 / 0.6923',
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  borderRadius: '.5rem',
+  borderRadius: '1.125rem',
   cursor: 'default',
+  '@media (max-width:480px)': {
+    borderRadius: '.5rem',
+  },
 };
 
 export const interactiveCardStyle: SxProps = {
@@ -20,16 +23,19 @@ export const interactiveCardStyle: SxProps = {
   width: '100%',
   minWidth: '8.5rem',
   minHeight: '5.875rem',
-  aspectRatio: '1 / 0.6924',
+  aspectRatio: '1 / 0.6923',
+  borderRadius: '1.125rem',
   backgroundRepeat: 'no-repeat',
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  borderRadius: '.5rem',
   cursor: 'pointer',
   filter: 'brightness(100%)',
   transition: 'filter 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
   '&:hover': {
     filter: 'brightness(90%)',
+  },
+  '@media (max-width:480px)': {
+    borderRadius: '.5rem',
   },
 };
 

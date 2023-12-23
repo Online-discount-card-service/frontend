@@ -1,22 +1,31 @@
-import { FC, useContext } from 'react';
+import { FC } from 'react';
 import * as z from 'zod';
 import { AuthForm, signIn, signUp } from '..';
 import {
   FieldType,
+  IBasicField,
   ISignUpRequest,
   api,
   authFormErrors,
   validationLengths,
   validationSchemes,
 } from '~/shared';
-import { CardsContext, UserContext } from '~/app';
+import { useUser } from '~/shared/store/useUser';
 
 export const SignUpForm: FC<{
-  defaultValues?: object;
+  defaultValues?: { [key: string]: string };
   handleShowRegistrationSuccess: () => void;
 }> = ({ defaultValues, handleShowRegistrationSuccess }) => {
-  const { setCards } = useContext(CardsContext);
-  const { setUser } = useContext(UserContext);
+  const setUser = useUser((state) => state.setUser);
+  const setCards = useUser((state) => state.setCards);
+
+  const defaults = {
+    name: defaultValues?.name || '',
+    email: defaultValues?.email || '',
+    phone_number: defaultValues?.phone || '',
+    password: defaultValues?.password || '',
+    passwordRepeat: defaultValues?.passwordRepeat || '',
+  };
 
   const schema = z
     .object({
@@ -57,6 +66,8 @@ export const SignUpForm: FC<{
       placeholder: '+7 (999) 999-99-99',
       maskOptions: {
         mask: '+7 (000) 000-00-00',
+        unmask: false,
+        overwrite: true,
       },
       hideAsterisk: true,
     },
@@ -69,6 +80,7 @@ export const SignUpForm: FC<{
       required: true,
       hideAsterisk: true,
       maxLength: validationLengths.email,
+      preValidate: true,
     },
     {
       name: 'password',
@@ -91,13 +103,15 @@ export const SignUpForm: FC<{
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
+  const submit = (data: IBasicField) => {
     const request: ISignUpRequest = {
-      name: data.name || '',
-      email: data.email || '',
+      name: typeof data.name === 'string' ? data.name : '',
+      email: typeof data.email === 'string' ? data.email : '',
       phone_number:
-        data.phone_number.replace(/\D/g, '').replace(/^7/, '') || '',
-      password: data.password || '',
+        typeof data.phone_number === 'string'
+          ? data.phone_number.replace(/\D/g, '').replace(/^7/, '')
+          : '',
+      password: typeof data.password === 'string' ? data.password : '',
     };
     return signUp(request)
       .then((res) =>
@@ -106,10 +120,8 @@ export const SignUpForm: FC<{
         )
       )
       .then((res) => {
-        const userPromise = setUser && setUser(res);
-        const cardsPromise = api
-          .getCards()
-          .then((res) => setCards && setCards(res));
+        const userPromise = setUser(res);
+        const cardsPromise = api.getCards().then((res) => setCards(res));
         return Promise.all([userPromise, cardsPromise]);
       })
       .then(() => handleShowRegistrationSuccess());
@@ -121,7 +133,7 @@ export const SignUpForm: FC<{
       schema={schema}
       button={{ label: 'Далее', fullWidth: true }}
       submit={submit}
-      defaultValues={defaultValues}
+      defaultValues={defaults}
     />
   );
 };

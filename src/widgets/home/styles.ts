@@ -2,18 +2,27 @@ import { SxProps } from '@mui/material';
 
 export const mainContainerStyle: SxProps = {
   height: '100%',
-  paddingBottom: '1rem',
-  paddingX: '1rem',
+  paddingBottom: { xs: '1.5rem', sm: '2rem' },
+  paddingX: { xs: '1rem', sm: '1.5rem' },
+  overflow: 'visible',
 };
 
 export const paragraphStyle: SxProps = {
-  width: '100%',
-  fontSize: '1.125rem',
+  width: '70%',
+  fontSize: '1.25rem',
   fontWeight: 400,
-  lineHeight: 1.5,
+  lineHeight: '1.5',
   letterSpacing: 0,
+  color: 'surface.darker',
   '@media (max-width:600px)': {
+    fontSize: '1.125rem',
+  },
+  '@media (max-width:480px)': {
+    width: '90%',
     fontSize: '1rem',
+  },
+  '@media (max-width:360px)': {
+    width: '100%',
   },
 };
 

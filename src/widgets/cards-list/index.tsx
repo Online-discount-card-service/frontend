@@ -1,9 +1,8 @@
 import { FC } from 'react';
-import { Box, Stack } from '@mui/material/';
+import { Stack } from '@mui/material/';
 import { CardSmall } from '~/entities';
 import { ICardsContext } from '~/shared';
 import { AddCardButton, sortCards } from '~/features';
-import { cardCellStyle } from './style';
 
 interface CardsListProps {
   items: ICardsContext | [];
@@ -11,10 +10,14 @@ interface CardsListProps {
 
 export const CardsList: FC<CardsListProps> = ({ items = [] }) => {
   return (
-    <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-      <Box key={'add-new-card'} sx={cardCellStyle}>
-        <AddCardButton text="Добавить новую карту" />
-      </Box>
+    <Stack
+      direction="row"
+      spacing={2}
+      flexWrap="wrap"
+      useFlexGap
+      sx={{ width: '100%' }}
+    >
+      <AddCardButton text="Добавить новую карту" />
       {items &&
         sortCards(items).map((item) => {
           return <CardSmall key={item.card.id} item={item} />;

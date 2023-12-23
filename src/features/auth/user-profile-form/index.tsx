@@ -1,7 +1,7 @@
-import { FC, useContext } from 'react';
+import { FC } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { IMask } from 'react-imask';
-import { Box, Button, Stack, Link } from '@mui/material';
+import { Box, Stack, Link } from '@mui/material';
+import { AccentButton, OutlineButton } from '~/shared/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -10,96 +10,128 @@ import {
   IPatchUser,
   validationLengths,
   validationSchemes,
+  IBasicField,
 } from '~/shared';
-import { UserContext, MessagesContext } from '~/app';
-import { InputSelector } from '~/features';
-import { ApiMessageTypes } from '~/shared/enums';
+import { InputSelector, checkEmail } from '~/features';
 import { IApiError } from '~/shared/errors';
 import { handleFormFieldsErrors } from '~/features/errors';
-import { formStyle, buttonStyle, linkStyle } from './style';
+import { formStyle, linkStyle, linkGroupStyle } from './style';
+import { useUser } from '~/shared/store/useUser';
+import { useMessages } from '~/shared/store';
 
-const schema = z.object({
-  name: validationSchemes.name,
-  email: validationSchemes.email,
-  phone_number: validationSchemes.phone_number,
-});
-
-const fields: FieldType[] = [
-  {
-    name: 'name',
-    label: 'Имя',
-    type: 'text',
-    defaultHelperText: ' ',
-    placeholder: '',
-    autoComplete: 'name',
-    required: true,
-    hideAsterisk: true,
-    maxLength: validationLengths.name,
-  },
-  {
-    name: 'phone_number',
-    label: 'Телефон',
-    type: 'text',
-    defaultHelperText: ' ',
-    autoComplete: 'tel',
-    required: true,
-    placeholder: '+7 (999) 999-99-99',
-    maskOptions: {
-      mask: '+7 (000) 000-00-00',
-    },
-    hideAsterisk: true,
-  },
-  {
-    name: 'email',
-    label: 'Email',
-    type: 'email',
-    defaultHelperText: ' ',
-    placeholder: '',
-    autoComplete: 'email',
-    required: true,
-    hideAsterisk: true,
-    maxLength: validationLengths.email,
-  },
-];
+interface IFields extends IBasicField {
+  name: string;
+  phone_number: string;
+  email: string;
+}
 
 interface IUserProfileForm {
   isActive: boolean;
   onChangePassword: () => void;
+  onActivateEmail: () => void;
   onEditDisable: () => void;
 }
 
 export const UserProfileForm: FC<IUserProfileForm> = ({
-  isActive = true,
+  isActive,
   onEditDisable,
   onChangePassword,
+  onActivateEmail,
 }) => {
-  const { user, setUser } = useContext(UserContext);
-  const { setMessages } = useContext(MessagesContext);
-  const masked = IMask.createMask({
-    mask: '+7 (000) 000-00-00',
+  const setUser = useUser((state) => state.setUser);
+  const user = useUser((state) => state.user);
+  const addErrorMessage = useMessages((state) => state.addErrorMessage);
+  const addSuccessMessage = useMessages((state) => state.addSuccessMessage);
+
+  const schema = z.object({
+    name: validationSchemes.name,
+    email: validationSchemes.email,
+    phone_number: validationSchemes.phone_number,
   });
-  masked.resolve(user?.phone_number || '');
+
+  const fields: FieldType[] = [
+    {
+      name: 'name',
+      label: 'Имя',
+      type: 'text',
+      defaultHelperText: ' ',
+      placeholder: '',
+      autoComplete: 'name',
+      required: true,
+      hideAsterisk: true,
+      maxLength: validationLengths.name,
+    },
+    {
+      name: 'phone_number',
+      label: 'Телефон',
+      type: 'text',
+      defaultHelperText: ' ',
+      autoComplete: 'tel',
+      required: true,
+      placeholder: '+7 (999) 999-99-99',
+      maskOptions: {
+        mask: '+7 (000) 000-00-00',
+        unmask: false,
+        overwrite: true,
+      },
+      hideAsterisk: true,
+    },
+    {
+      name: 'email',
+      label: 'Email',
+      type: 'email',
+      defaultHelperText: user?.is_active ? ' ' : 'Ваш Email не подтвержден',
+      placeholder: '',
+      autoComplete: 'email',
+      required: true,
+      hideAsterisk: true,
+      maxLength: validationLengths.email,
+      preValidate: true,
+    },
+  ];
+
+  const preValidateEmail = () => {
+    const email = getValues('email');
+    const { error, isDirty, invalid } = getFieldState('email');
+    typeof email === 'string' &&
+      (!invalid ||
+        error?.message === 'Пользователь с таким email уже существует.') &&
+      isDirty &&
+      checkEmail(email).catch(
+        (err) =>
+          err?.detail?.email?.[0] ===
+            'Пользователь с таким email уже существует.' &&
+          setError('email', { type: 'exists', message: err.detail.email[0] })
+      );
+  };
 
   const {
-    register,
+    control,
     handleSubmit,
     setError,
     getValues,
     reset,
-    formState: { errors, isSubmitting },
-  } = useForm<{ [key: string]: string }>({
+    getFieldState,
+    formState: { isSubmitting },
+  } = useForm<IFields>({
     mode: 'onTouched',
     resolver: zodResolver(schema),
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone_number: masked.value,
+      name: user?.name,
+      email: user?.email,
+      phone_number: user?.phone_number,
     },
   });
 
   const handleCancelChanges = () => {
-    reset();
     onEditDisable();
+    if (user) {
+      reset({
+        name: user.name,
+        email: user.email,
+        phone_number: user.phone_number,
+      });
+    }
   };
 
   const handleError = (err: IApiError) => {
@@ -107,39 +139,28 @@ export const UserProfileForm: FC<IUserProfileForm> = ({
     if (err.status === 400 && err.detail && !err.detail.non_field_errors) {
       handleFormFieldsErrors(err, fields, setError);
     } else {
-      setMessages((messages) => [
-        {
-          message:
-            err.detail?.non_field_errors?.join(' ') ||
-            err.message ||
-            'Ошибка сервера',
-          type: ApiMessageTypes.error,
-        },
-        ...messages,
-      ]);
+      addErrorMessage(
+        err.detail?.non_field_errors?.join(' ') ||
+          err.message ||
+          'Ошибка сервера'
+      );
     }
   };
 
-  const onSubmit: SubmitHandler<{ [key: string]: string }> = (data) => {
+  const onSubmit: SubmitHandler<IFields> = (data) => {
     const request: IPatchUser = {
-      name: data.name || '',
-      email: data.email || '',
-      phone_number:
-        data.phone_number.replace(/\D/g, '').replace(/^7/, '') || '',
+      ...(data.name && { name: data.name }),
+      ...(data.email && { email: data.email }),
+      ...(data.phone_number && {
+        phone_number: data.phone_number.replace(/\D/g, '').replace(/^7/, ''),
+      }),
     };
-
     if (
       request.name === user?.name &&
       request.email === user?.email &&
       request.phone_number === user?.phone_number
     ) {
-      setMessages((messages) => [
-        {
-          message: 'Данные не поменялись, но мы все сохранили',
-          type: ApiMessageTypes.error,
-        },
-        ...messages,
-      ]);
+      addSuccessMessage('Данные не поменялись, но мы все сохранили');
       onEditDisable();
       return;
     }
@@ -147,16 +168,10 @@ export const UserProfileForm: FC<IUserProfileForm> = ({
     api
       .editUser(request)
       .then((res) => {
-        return setUser && setUser(res);
+        return setUser(res);
       })
       .then(() => {
-        setMessages((messages) => [
-          {
-            message: 'Данные успешно изменены',
-            type: ApiMessageTypes.success,
-          },
-          ...messages,
-        ]);
+        addSuccessMessage('Данные успешно изменены');
         onEditDisable();
       })
       .catch(handleError);
@@ -173,38 +188,35 @@ export const UserProfileForm: FC<IUserProfileForm> = ({
         fields.map((field) => (
           <InputSelector
             {...field}
+            control={control}
             disabled={!isActive || isSubmitting}
             key={field.name}
-            register={register}
-            errors={errors}
+            preValidator={preValidateEmail}
           />
         ))}
-
-      <Link onClick={onChangePassword} sx={{ ...linkStyle }}>
-        Изменить пароль
-      </Link>
+      <Stack sx={linkGroupStyle} useFlexGap spacing={2}>
+        {!user?.is_active && (
+          <Link onClick={onActivateEmail} sx={{ ...linkStyle }}>
+            Подтвердить Email
+          </Link>
+        )}
+        <Link onClick={onChangePassword} sx={{ ...linkStyle }}>
+          Изменить пароль
+        </Link>
+      </Stack>
 
       {isActive && (
         <Stack spacing={{ xs: 1, sm: 2 }} useFlexGap>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={isSubmitting}
-            fullWidth
-            sx={buttonStyle}
-          >
+          <AccentButton type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Подождите...' : 'Сохранить'}
-          </Button>
-          <Button
+          </AccentButton>
+          <OutlineButton
             type="button"
-            variant="outlined"
             disabled={isSubmitting}
-            fullWidth
-            sx={buttonStyle}
             onClick={handleCancelChanges}
           >
             Отменить изменения
-          </Button>
+          </OutlineButton>
         </Stack>
       )}
     </Box>

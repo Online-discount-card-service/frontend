@@ -1,27 +1,14 @@
 import { SxProps } from '@mui/material';
 
 export const containerStyle: SxProps = {
-  paddingX: '1rem',
+  paddingX: { xs: '1rem', sm: '1.5rem' },
   paddingBottom: '2rem',
-};
-
-export const buttonStyle: SxProps = {
-  borderRadius: '.5rem',
-  fontSize: '0.875rem',
-  padding: '1.125rem 0',
-  textTransform: 'none',
 };
 
 export const topButtonsStyle: SxProps = {
   minHeight: '3.56rem',
   paddingTop: 2.5,
   paddingBottom: 1.5,
-};
-
-export const likerWrapperStyle: SxProps = {
-  '& > .css-prsw32-MuiButtonBase-root-MuiIconButton-root': {
-    color: 'surface.dark',
-  },
 };
 
 export const deleteTitleStyle: SxProps = {
@@ -44,4 +31,18 @@ export const deleteTextStyle: SxProps = {
   fontSize: '1rem',
   fontWeight: 400,
   lineHeight: 1.5,
+};
+
+export const wrapperStyle: SxProps = {
+  maxWidth: '100%',
+  paddingY: 1.25,
+  overflow: 'hidden',
+};
+
+export const paragraphStyle: SxProps = {
+  fontSize: '.875rem',
+  fontWeight: 400,
+  lineHeight: '1.125rem',
+  textAlign: 'left',
+  color: 'surface.darker',
 };

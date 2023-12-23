@@ -1,11 +1,11 @@
-import { FC, useContext } from 'react';
+import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link, List, ListItem } from '@mui/material';
 import * as z from 'zod';
-import { CardsContext, UserContext } from '~/app';
 import { getUser } from '~/features';
 import {
   FieldType,
+  IBasicField,
   ISignInRequest,
   api,
   validationLengths,
@@ -13,6 +13,8 @@ import {
 } from '~/shared';
 import { AuthForm, signIn } from '..';
 import { listStyle, linkStyle } from './style';
+import { useUser } from '~/shared/store/useUser';
+import { useMessages } from '~/shared/store';
 
 //NOTE: Sign In form types affect on submit behavior
 // "activation" doesn't redirect after signin
@@ -27,13 +29,19 @@ export const SignInForm: FC<ISignInForm> = ({
   type = 'signIn',
   onResetPassword,
 }) => {
-  const { setUser } = useContext(UserContext);
-  const { setCards } = useContext(CardsContext);
+  const addInfoMessage = useMessages((state) => state.addInfoMessage);
+  const setUser = useUser((state) => state.setUser);
+  const setCards = useUser((state) => state.setCards);
   const navigate = useNavigate();
   const schema = z.object({
     email: validationSchemes.email,
     password: validationSchemes.password_old,
   });
+
+  const defaultValues = {
+    email: '',
+    password: '',
+  };
 
   const fields: FieldType[] = [
     {
@@ -58,17 +66,20 @@ export const SignInForm: FC<ISignInForm> = ({
     },
   ];
 
-  const submit = (data: { [key: string]: string }) => {
+  const submit = (data: IBasicField) => {
     const request: ISignInRequest = {
-      email: data.email || '',
-      password: data.password || '',
+      email: typeof data.email === 'string' ? data.email : '',
+      password: typeof data.password === 'string' ? data.password : '',
     };
     return signIn(request)
       .then(() => {
-        const userPromise = getUser().then((res) => setUser && setUser(res));
-        const cardsPromise = api
-          .getCards()
-          .then((res) => setCards && setCards(res));
+        const userPromise = getUser()
+          .then((res) => {
+            !res?.is_active && addInfoMessage('Email не подтвержден');
+            return res;
+          })
+          .then((res) => setUser(res));
+        const cardsPromise = api.getCards().then((res) => setCards(res));
         return Promise.all([userPromise, cardsPromise]);
       })
       .then(() => {
@@ -83,6 +94,7 @@ export const SignInForm: FC<ISignInForm> = ({
       schema={schema}
       button={{ label: 'Войти', fullWidth: true }}
       submit={submit}
+      defaultValues={defaultValues}
     >
       <List sx={{ ...listStyle }} color="secondary" dense disablePadding>
         <ListItem disableGutters disablePadding dense>
